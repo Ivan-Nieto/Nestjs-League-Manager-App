@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
 
 @Injectable()
-export class PersonService {}
+export class PersonService {
+  public notImplemented() {
+    throw new HttpException('Not Implemented', 500);
+  }
+}
