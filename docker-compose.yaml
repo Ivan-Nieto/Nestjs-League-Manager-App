@@ -1,0 +1,23 @@
+version: '3.1'
+
+services:
+  app:
+    build: .
+    volumes:
+      - ./:/usr/src/app
+    depends_on:
+      - postgres
+    container_name: c_league_app
+    ports:
+      - 3001:3000
+
+  postgres:
+    image: postgres
+    container_name: c_league_db
+    restart: always
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_USER: apiuser
+      POSTGRES_PASSWORD: dbuser123
+      POSTGRES_DB: league
