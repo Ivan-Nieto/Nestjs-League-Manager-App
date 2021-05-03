@@ -10,13 +10,19 @@ services:
     container_name: c_league_app
     ports:
       - 3001:3000
+    environment:
+      POSTGRES_USER: apiuser
+      POSTGRES_PASSWORD: dbuser123
+      POSTGRES_DB: league
+      POSTGRES_PORT: 5432
+      POSTGRES_HOST: host.docker.internal
 
   postgres:
     image: postgres
     container_name: c_league_db
     restart: always
     ports:
-      - 5433:5432
+      - 5432:5432
     environment:
       POSTGRES_USER: apiuser
       POSTGRES_PASSWORD: dbuser123

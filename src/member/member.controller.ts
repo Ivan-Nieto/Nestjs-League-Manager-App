@@ -11,6 +11,8 @@ import { MemberIdValidationPipe } from './validationPipes/MemberIdValidationPipe
 import { CreateMemberValidationPipe } from './validationPipes/CreateMemberValidationPipe';
 import { PaymentValidationPipe } from './validationPipes/PaymentValidationPipe';
 import { MemberService } from './member.service';
+import { MemberDto } from './member.dto';
+
 @Controller('member')
 export class MemberController {
   constructor(private memberService: MemberService) {}
@@ -21,7 +23,7 @@ export class MemberController {
     return this.memberService.notImplemented();
   }
 
-  @Get('/:memberId')
+  @Get(':memberId')
   getMember(@Param('memberId', MemberIdValidationPipe) memberId: string) {
     console.log(`GET member/:memberId`, memberId);
     return this.memberService.notImplemented();
@@ -34,9 +36,9 @@ export class MemberController {
   }
 
   @Post()
-  addMember(@Body(CreateMemberValidationPipe) member: any) {
+  addMember(@Body() member: MemberDto) {
     console.log('POST member/', member);
-    return this.memberService.notImplemented();
+    return this.memberService.createMember();
   }
 
   @Post('/:memberId/payment')
