@@ -3,19 +3,46 @@ import {
   Injectable,
   ValidationPipe,
 } from '@nestjs/common';
+import { validate } from 'class-validator';
+import { v4 as uuidv4 } from 'uuid';
+import { MemberDto } from '../member.dto';
+import { PersonDto } from '../../person/person.dto';
 
 @Injectable()
 export class CreateMemberValidationPipe extends ValidationPipe {
-  transform(value: any) {
-    // Make sure id is unique
+  async transform(value: any) {
+    const member = new MemberDto();
+    member.id = uuidv4();
+    member.role = value?.role;
 
-    // Make sure there is a person associated with person_id if provided
+    const person = new PersonDto();
+    person.id = member.id;
+    person.name = value?.name;
+    person.last_name = value?.last_name;
+    person.email = value?.email;
+    person.dob = value?.dob;
 
-    // Make sure there isn't already a member associated to that person_id if provided
+    const Error = (arr?: Array<any>) =>
+      new BadRequestException(
+        `Invalid parameters${arr ? ` :${arr?.join(', ')}` : ''}`,
+      );
 
-    // Make sure there is a team associated with team_id if provided
+    const val = async (e: any) =>
+      validate(e)
+        .then((errors) => {
+          if (errors.length) throw Error(errors);
+        })
+        .catch((error) => {
+          console.error(error);
+          throw Error();
+        });
 
-    throw new BadRequestException('Validation Not Implemented');
-    return value;
+    await val(member);
+    await val(person);
+
+    return {
+      ...value,
+      id: uuidv4(),
+    };
   }
 }

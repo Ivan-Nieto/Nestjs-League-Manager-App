@@ -10,8 +10,13 @@ import {
 import { MemberIdValidationPipe } from './validationPipes/MemberIdValidationPipe';
 import { CreateMemberValidationPipe } from './validationPipes/CreateMemberValidationPipe';
 import { PaymentValidationPipe } from './validationPipes/PaymentValidationPipe';
+import {
+  UpdateMemberValidationPipe,
+  UpdateObject,
+} from './validationPipes/UpdateMemberValidationPipe';
 import { MemberService } from './member.service';
 import { MemberDto } from './member.dto';
+import { PatchMemberStatusValidationPipe } from './validationPipes/PatchMemberStatusValidationPipe';
 
 @Controller('member')
 export class MemberController {
@@ -19,54 +24,50 @@ export class MemberController {
 
   @Get()
   getMembers() {
-    console.log('GET member/');
-    return this.memberService.notImplemented();
-  }
-
-  @Get(':memberId')
-  getMember(@Param('memberId', MemberIdValidationPipe) memberId: string) {
-    console.log(`GET member/:memberId`, memberId);
-    return this.memberService.notImplemented();
+    return this.memberService.getMembers();
   }
 
   @Get('/free-agent')
   getFreeAgents() {
-    console.log('GET member/free-agent');
-    return this.memberService.notImplemented();
+    return this.memberService.getFreeAgents();
+  }
+
+  @Get(':memberId')
+  getMember(@Param('memberId', MemberIdValidationPipe) memberId: string) {
+    return this.memberService.getMember(memberId);
   }
 
   @Post()
-  addMember(@Body() member: MemberDto) {
-    console.log('POST member/', member);
-    return this.memberService.createMember();
+  addMember(@Body(CreateMemberValidationPipe) member: MemberDto) {
+    return this.memberService.createMember(member);
   }
 
   @Post('/:memberId/payment')
   addMemberPayment(
     @Param('memberId', MemberIdValidationPipe) memberId: string,
-    @Body(PaymentValidationPipe) payment: any,
+    @Body(PaymentValidationPipe) payment: number,
   ) {
-    console.log(`POST member/:memberId/payment`, memberId, payment);
-    return this.memberService.notImplemented();
+    return this.memberService.makePayment(memberId, payment);
+  }
+
+  @Patch(':memberId/status')
+  patchStatus(
+    @Param('memberId', MemberIdValidationPipe) memberId: string,
+    @Body(PatchMemberStatusValidationPipe) status: string,
+  ) {
+    return this.memberService.patchUserStatus(memberId, status);
   }
 
   @Patch('/:memberId')
   patchMember(
     @Param('memberId', MemberIdValidationPipe) memberId: string,
-    @Body() data: Record<string, any>,
+    @Body(UpdateMemberValidationPipe) data: UpdateObject,
   ) {
-    console.log(`PATCH member/:memberId`, memberId, data);
-    return this.memberService.notImplemented();
+    return this.memberService.updateMember(memberId, data);
   }
 
-  @Patch('/status')
-  patchStatus(@Body() status: string) {
-    console.log(`PATCH member/status`, status);
-    return this.memberService.notImplemented();
-  }
   @Delete('/:memberId')
   deleteMember(@Param('memberId', MemberIdValidationPipe) memberId: string) {
-    console.log(`DELETE member/:memberId`, memberId);
-    return this.memberService.notImplemented();
+    return this.memberService.deleteMember(memberId);
   }
 }

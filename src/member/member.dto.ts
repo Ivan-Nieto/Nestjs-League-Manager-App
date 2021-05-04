@@ -1,4 +1,4 @@
-import { IsInt, Min, IsString, IsOptional } from 'class-validator';
+import { IsInt, Min, IsString, IsOptional, IsUUID } from 'class-validator';
 
 export class StatsDto {
   @IsInt()
@@ -7,7 +7,7 @@ export class StatsDto {
 }
 
 export class MemberDto {
-  @IsString()
+  @IsUUID()
   id: string;
 
   @IsString()
@@ -19,6 +19,7 @@ export class MemberDto {
   role?: string;
 
   @IsString()
+  @IsOptional()
   status: string;
 
   @IsInt()

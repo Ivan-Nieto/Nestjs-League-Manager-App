@@ -1,42 +1,40 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class initTables1619796505416 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
-    const run = queryRunner.query;
+  name = 'initTables1619796505416';
 
+  public async up(queryRunner: QueryRunner): Promise<void> {
     // Create tables
-    await Promise.all([
-      run(
-        `CREATE TABLE IF NOT EXISTS "member" ("id" uuid NOT NULL, "person_id" uuid NOT NULL, "role" character  NOT NULL, "status" character  NOT NULL, "balance" integer  NOT NULL, "team_id" uuid, "stats" jsonb  NOT NULL, PRIMARY KEY ("id") )`,
-      ),
-      run(
-        `CREATE TABLE IF NOT EXISTS "person" ("id" uuid NOT NULL, "name" character  NOT NULL, "last_name" character  NOT NULL, "phone" integer  NOT NULL, "email" character  NOT NULL, "dob" TIMESTAMP NOT NULL, "age" character NOT NULL,  PRIMARY KEY ("id"))`,
-      ),
-      run(
-        `CREATE TABLE IF NOT EXISTS "team" ("id" uuid NOT NULL, "name" character NOT NULL, "coach" uuid NOT NULL, "captain" uuid, "status" AS ENUM('active', 'inactive'), PRIMARY KEY ("id"))`,
-      ),
-      run(
-        `CREATE TABLE IF NOT EXISTS "match" ("id" uuid NOT NULL, "home" uuid NOT NULL, "team" uuid NOT NULL, "home-score" integer, "away-score" integer, "played" TIMESTAMP NOT NULL, "location" AS ENUM('active', 'inactive'),  PRIMARY KEY ("id"))`,
-      ),
-    ]);
+
+    await queryRunner.query(
+      `CREATE TABLE "member" ("id" uuid NOT NULL, "person_id" uuid NOT NULL, "role" character varying  NOT NULL, "status" character varying  NOT NULL, "balance" integer  NOT NULL, "team_id" uuid, "stats" jsonb, PRIMARY KEY ("id") )`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "person" ("id" uuid NOT NULL, "name" character varying  NOT NULL, "last_name" character varying  NOT NULL, "phone" BIGINT  NOT NULL, "email" character varying  NOT NULL, "dob" TIMESTAMP NOT NULL, "age" character varying, PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "status_enum" AS ENUM('active', 'inactive')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "team" ("id" uuid NOT NULL, "name" character varying NOT NULL, "coach" uuid NOT NULL, "captain" uuid, "status" "status_enum", PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "match" ("id" uuid NOT NULL, "home" uuid NOT NULL, "team" uuid NOT NULL, "home-score" integer, "away-score" integer, "played" TIMESTAMP, "location" "status_enum", PRIMARY KEY ("id"))`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    const run = queryRunner.query;
-
-    // Drops all provided keys from given table
-    const dropFks = (table: string, keys: string[]): Array<any> =>
-      keys.map((e) => run(`ALTER TABLE "${table}" DROP CONSTRAINT "${e}"`));
-
-    // Remove foreign keys
-    await Promise.all([
-      ...dropFks('member', ['person_id', 'team_id']),
-      ...dropFks('team', ['coach', 'captain']),
-      ...dropFks('match', ['home', 'team']),
-    ]);
+    await queryRunner.query(`ALTER TABLE "member" DROP CONSTRAINT "person_id"`);
+    await queryRunner.query(`ALTER TABLE "member" DROP CONSTRAINT "team_id"`);
+    await queryRunner.query(`ALTER TABLE "team" DROP CONSTRAINT "coach"`);
+    await queryRunner.query(`ALTER TABLE "team" DROP CONSTRAINT "captain"`);
+    await queryRunner.query(`ALTER TABLE "match" DROP CONSTRAINT "home"`);
+    await queryRunner.query(`ALTER TABLE "match" DROP CONSTRAINT "team"`);
 
     // Drop all tables
-    const tables = ['member', 'person', 'team', 'match'];
-    await Promise.all(tables.map((e) => run(`DROP TABLE "${e}"`)));
+    await queryRunner.query(`DROP TABLE "member"`);
+    await queryRunner.query(`DROP TABLE "person"`);
+    await queryRunner.query(`DROP TABLE "team"`);
+    await queryRunner.query(`DROP TABLE "match"`);
   }
 }

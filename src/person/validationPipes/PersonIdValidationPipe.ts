@@ -3,11 +3,27 @@ import {
   Injectable,
   ValidationPipe,
 } from '@nestjs/common';
+import { validate } from 'class-validator';
+import { PersonDto } from '../person.dto';
 
 @Injectable()
 export class PersonIdValidationPipe extends ValidationPipe {
-  transform(value: any) {
-    throw new BadRequestException('Validation Not Implemented');
+  async transform(value: any) {
+    const person = new PersonDto();
+    person.id = value || '';
+
+    await validate(person, {
+      forbidUnknownValues: true,
+      skipMissingProperties: true,
+    })
+      .then((errors) => {
+        if (errors.length) throw new BadRequestException('Invalid person id');
+      })
+      .catch((error) => {
+        console.error(error);
+        throw new BadRequestException('Invalid person id');
+      });
+
     return value;
   }
 }

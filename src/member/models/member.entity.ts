@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryColumn } from 'typeorm';
 import { Person } from '../../person/models/person.entity';
 import { Team } from '../../team/models/team.entity';
 
@@ -9,7 +9,6 @@ export class Member {
 
   @Column()
   @OneToOne(() => Person)
-  @JoinColumn()
   person_id: string;
 
   @Column()
@@ -23,7 +22,6 @@ export class Member {
 
   @Column()
   @OneToOne(() => Team)
-  @JoinColumn()
   team_id: string | null;
 
   @Column({ type: 'jsonb' })

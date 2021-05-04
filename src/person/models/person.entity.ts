@@ -1,4 +1,4 @@
-import { Min } from 'class-validator';
+import { IsOptional, Min } from 'class-validator';
 import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity()
@@ -19,9 +19,11 @@ export class Person {
   email: string;
 
   @Column()
-  dob: string;
+  @IsOptional()
+  dob: Date;
 
   @Column()
   @Min(0)
+  @IsOptional()
   age: number;
 }
