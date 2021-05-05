@@ -26,4 +26,20 @@ export class Person {
   @Min(0)
   @IsOptional()
   age: number;
+
+  constructor(config?: {
+    id?: string;
+    name?: string;
+    last_name?: string;
+    phone?: number;
+    email?: string;
+    dob?: Date;
+    age?: number;
+  }) {
+    if (!config || Object.keys(config).length === 0) return;
+
+    ['id', 'name', 'last_name', 'phone', 'email', 'dob', 'age'].forEach((e) =>
+      config[e] == null ? null : (this[e] = config[e]),
+    );
+  }
 }

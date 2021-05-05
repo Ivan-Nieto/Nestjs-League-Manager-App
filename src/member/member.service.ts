@@ -27,19 +27,26 @@ export class MemberService {
   }
 
   public getMembers() {
-    return this.connection.find().catch(() => {
-      throw new HttpException('Not Found', 404);
-    });
+    return this.connection
+      .createQueryBuilder('m')
+      .select(['*', 'm.id AS id'])
+      .innerJoin(Person, 'p', 'm.person_id = p.id')
+      .getRawMany()
+      .catch(console.error);
   }
 
   public async getMember(memberId: string) {
-    const member = await this.connection.findOne(memberId).catch(this.notFound);
+    const member = await this.connection
+      .createQueryBuilder('m')
+      .select(['*', 'm.id AS id'])
+      .innerJoin(Person, 'p', 'm.person_id = p.id')
+      .where('m.id = :memberId', { memberId })
+      .getRawOne()
+      .catch(console.error);
 
-    const person = await this.connection.manager
-      .findOne(Person, member.person_id)
-      .catch(this.notFound);
+    if (!member) throw new HttpException('Not Found', 404);
 
-    return [member, person];
+    return member;
   }
 
   public getFreeAgents() {

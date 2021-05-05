@@ -10,21 +10,25 @@ import {
 import { MatchIdValidationPipe } from './validationPipes/MatchIdValidationPipe';
 import { CreateMatchValidationPipe } from './validationPipes/CreateMatchValidationPipe';
 import { MatchService } from './match.service';
+import { MatchDto } from './match.dto';
 
 @Controller('match')
 export class MatchController {
   constructor(private matchService: MatchService) {}
 
+  @Get()
+  getAllMatches() {
+    return this.matchService.getAllMatches();
+  }
+
   @Post()
-  addMatch(@Body(CreateMatchValidationPipe) match: Record<string, any>) {
-    console.log('POST match/', match);
-    return this.matchService.notImplemented();
+  addMatch(@Body(CreateMatchValidationPipe) match: MatchDto) {
+    return this.matchService.addMatch(match);
   }
 
   @Get(':matchId')
   getMatch(@Param('matchId', MatchIdValidationPipe) matchId: string) {
-    console.log('GET match/:matchId', matchId);
-    return this.matchService.notImplemented();
+    return this.matchService.getMatch(matchId);
   }
 
   @Patch(':matchId')

@@ -11,62 +11,68 @@ import {
 import { TeamService } from './team.service';
 import { TeamIdValidationPipe } from './validationPipes/TeamIdValidationPipe';
 import { CreateTeamValidationPipe } from './validationPipes/CreateTeamValidationPipe';
+import { TeamDto } from './team.dto';
+import { StatusValidationPipe } from './validationPipes/StatusValidationPipe';
+import { RoleValidationPipe } from './validationPipes/RoleValidationPipe';
+import { PatchTeamValidationPipe } from './validationPipes/PatchTeamValidationPipe';
+import { PatchTeamStatusValidationPipe } from './validationPipes/PatchTeamStatusValidationPipe';
+
 @Controller('team')
 export class TeamController {
   constructor(private teamService: TeamService) {}
 
+  @Get()
+  getAllTeams() {
+    return this.teamService.getTeams();
+  }
+
   @Post()
-  addTeam(@Body(CreateTeamValidationPipe) team: Record<string, any>) {
-    console.log('POST team/', team);
-    return this.teamService.notImplemented();
+  addTeam(@Body(CreateTeamValidationPipe) team: TeamDto) {
+    return this.teamService.createTeam(team);
   }
 
   @Get(':teamId')
   getTeam(@Param('teamId', TeamIdValidationPipe) teamId: string) {
-    console.log('GET team/:teamId', teamId);
-    return this.teamService.notImplemented();
+    return this.teamService.getTeam(teamId);
   }
 
   @Get(':teamId/matches')
   getTeamMatches(@Param('teamId', TeamIdValidationPipe) teamId: string) {
-    console.log('GET team/:teamId/matches', teamId);
-    return this.teamService.notImplemented();
+    return this.teamService.getTeamMatches(teamId);
   }
 
   @Get(':teamId/member')
   getTeamMembers(
     @Param('teamId', TeamIdValidationPipe) teamId: string,
-    @Query('status') status?: string,
-    @Query('role') role?: string,
+    @Query('status', StatusValidationPipe) status?: string,
+    @Query('role', RoleValidationPipe) role?: string,
   ) {
-    console.log('GET team/:teamId/member', teamId, status, role);
-    return this.teamService.notImplemented();
+    return this.teamService.getMembers(teamId, status, role);
   }
 
   @Get(':teamId/stats')
   getTeamStats(@Param('teamId', TeamIdValidationPipe) teamId: string) {
-    console.log('GET team/:teamId/stats', teamId);
-    return this.teamService.notImplemented();
+    return this.teamService.getStats(teamId);
   }
 
   @Patch(':teamId')
-  patchTeam(@Param('teamId', TeamIdValidationPipe) teamId: string) {
-    console.log('PATCH team/:teamId', teamId);
-    return this.teamService.notImplemented();
+  patchTeam(
+    @Param('teamId', TeamIdValidationPipe) teamId: string,
+    @Body(PatchTeamValidationPipe) config: Partial<TeamDto>,
+  ) {
+    return this.teamService.updateTeam(teamId, config);
   }
 
   @Patch(':teamId/status')
   patchStatus(
     @Param('teamId', TeamIdValidationPipe) teamId: string,
-    @Body() status: Record<string, any>,
+    @Body(PatchTeamStatusValidationPipe) status: string,
   ) {
-    console.log('PATCH team/:teamId/status', teamId, status);
-    return this.teamService.notImplemented();
+    return this.teamService.updateTeam(teamId, { status });
   }
 
   @Delete(':teamId')
-  deleteTema(@Param('teamId', TeamIdValidationPipe) teamId: string) {
-    console.log('DELETE team/', teamId);
-    return this.teamService.notImplemented();
+  deleteTeam(@Param('teamId', TeamIdValidationPipe) teamId: string) {
+    return this.teamService.deleteTeam(teamId);
   }
 }

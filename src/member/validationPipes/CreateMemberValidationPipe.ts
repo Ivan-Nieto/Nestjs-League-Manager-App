@@ -11,16 +11,15 @@ import { PersonDto } from '../../person/person.dto';
 @Injectable()
 export class CreateMemberValidationPipe extends ValidationPipe {
   async transform(value: any) {
-    const member = new MemberDto();
-    member.id = uuidv4();
-    member.role = value?.role;
+    const member = new MemberDto({ id: uuidv4(), role: value.role });
 
-    const person = new PersonDto();
-    person.id = member.id;
-    person.name = value?.name;
-    person.last_name = value?.last_name;
-    person.email = value?.email;
-    person.dob = value?.dob;
+    const person = new PersonDto({
+      id: member.id,
+      name: value?.name,
+      last_name: value?.last_name,
+      email: value?.email,
+      dob: value?.dob,
+    });
 
     const Error = (arr?: Array<any>) =>
       new BadRequestException(
@@ -42,7 +41,7 @@ export class CreateMemberValidationPipe extends ValidationPipe {
 
     return {
       ...value,
-      id: uuidv4(),
+      id: member.id,
     };
   }
 }
