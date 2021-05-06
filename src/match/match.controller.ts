@@ -11,6 +11,7 @@ import { MatchIdValidationPipe } from './validationPipes/MatchIdValidationPipe';
 import { CreateMatchValidationPipe } from './validationPipes/CreateMatchValidationPipe';
 import { MatchService } from './match.service';
 import { MatchDto } from './match.dto';
+import { PatchMatchValidationPipe } from './validationPipes/PatchMatchValidationPipe';
 
 @Controller('match')
 export class MatchController {
@@ -32,14 +33,15 @@ export class MatchController {
   }
 
   @Patch(':matchId')
-  patchMatch(@Param('matchId', MatchIdValidationPipe) matchId: string) {
-    console.log('PATCH match/:matchId', matchId);
-    return this.matchService.notImplemented();
+  patchMatch(
+    @Param('matchId', MatchIdValidationPipe) matchId: string,
+    @Body(PatchMatchValidationPipe) config: Partial<MatchDto>,
+  ) {
+    return this.matchService.updateMatch(matchId, config);
   }
 
   @Delete(':matchId')
   deleteMatch(@Param('matchId', MatchIdValidationPipe) matchId: string) {
-    console.log('DELETE match/', matchId);
-    return this.matchService.notImplemented();
+    return this.matchService.delete(matchId);
   }
 }

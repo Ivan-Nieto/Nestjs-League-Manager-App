@@ -8,19 +8,8 @@ export class StatsDto {
 
 export class MemberDto {
   @IsUUID()
+  @IsOptional()
   id: string;
-
-  @IsString()
-  @IsOptional()
-  person_id?: string;
-
-  @IsString()
-  @IsOptional()
-  role?: string;
-
-  @IsString()
-  @IsOptional()
-  status: string;
 
   @IsInt()
   @IsOptional()
@@ -36,23 +25,14 @@ export class MemberDto {
 
   constructor(config?: {
     id?: string;
-    person_id?: string;
-    role?: string;
-    status?: string;
     balance?: number;
     team_id?: string;
     stats?: StatsDto;
   }) {
     if (!config || Object.keys(config).length === 0) return;
 
-    [
-      'id',
-      'person_id',
-      'role',
-      'status',
-      'balance',
-      'team_id',
-      'stats',
-    ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
+    ['id', 'balance', 'team_id', 'stats'].forEach((e) =>
+      config[e] == null ? null : (this[e] = config[e]),
+    );
   }
 }

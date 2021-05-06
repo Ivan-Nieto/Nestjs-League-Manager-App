@@ -5,32 +5,23 @@ import {
 } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { Team } from '../models/team.entity';
-import { validate } from 'class-validator';
+import validObject from 'src/utils/validObject';
+import validateEntity from 'src/utils/validateEntity';
 
 @Injectable()
 export class CreateTeamValidationPipe extends ValidationPipe {
   async transform(value: any) {
-    const team = new Team();
-    team.id = uuidv4();
-    team.captain = value.captain;
-    team.coach = value.coach;
-    team.name = value.name;
-    team.status = value.status;
+    if (!validObject(value) || Object.keys(value).length === 0)
+      throw new BadRequestException('Invalid request body');
 
-    const Error = (arr?: Array<any>) =>
-      new BadRequestException(
-        `Invalid parameters${arr ? ` :${arr?.join(', ')}` : ''}`,
-      );
+    const team = new Team({
+      id: uuidv4(),
+      ...value,
+    });
 
-    await validate(team)
-      .then((errors) => {
-        if (errors.length) throw Error(errors);
-      })
-      .catch((error) => {
-        console.error(error);
-        throw Error();
-      });
+    const { valid, message } = await validateEntity(team);
+    if (!valid) throw new BadRequestException(`Invalid parameters: ${message}`);
 
-    return { ...value, id: uuidv4() };
+    return team.toObject();
   }
 }

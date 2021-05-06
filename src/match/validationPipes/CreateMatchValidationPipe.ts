@@ -6,7 +6,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { Match } from '../models/match.entity';
 import validObject from '../../utils/validObject';
-import { validate } from 'class-validator';
+import validateEntity from 'src/utils/validateEntity';
 
 @Injectable()
 export class CreateMatchValidationPipe extends ValidationPipe {
@@ -18,6 +18,7 @@ export class CreateMatchValidationPipe extends ValidationPipe {
     match.id = uuidv4();
     const addData = (field: string) =>
       value[field] == null ? null : (match[field] = value[field]);
+
     [
       'home',
       'team',
@@ -27,19 +28,8 @@ export class CreateMatchValidationPipe extends ValidationPipe {
       'location',
     ].forEach((e) => addData(e));
 
-    const Error = (arr?: Array<any>) =>
-      new BadRequestException(
-        `Invalid parameters${arr ? ` :${arr?.join(', ')}` : ''}`,
-      );
-
-    await validate(match)
-      .then((errors) => {
-        if (errors.length) throw Error(errors);
-      })
-      .catch((error) => {
-        console.error(error);
-        throw Error();
-      });
+    const { valid, message } = await validateEntity(match);
+    if (!valid) new BadRequestException(`Invalid parameters: ${message}`);
 
     return { ...value, id: match.id };
   }

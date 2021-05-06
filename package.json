@@ -22,7 +22,8 @@
     "start:docker": "(npm run migration) & nest start --watch",
     "migration": "ts-node ./node_modules/typeorm/cli -f ./src/database/config/ormconfig.ts migration:run",
     "migration:undo": "ts-node ./node_modules/typeorm/cli -f ./src/database/config/ormconfig.ts migration:revert",
-    "migration:create": "ts-node ./node_modules/typeorm/cli -f ./src/database/config/ormconfig.ts migration:create -n"
+    "migration:create": "ts-node ./node_modules/typeorm/cli -f ./src/database/config/ormconfig.ts migration:create -n",
+    "migration:generate": "ts-node ./node_modules/typeorm/cli -f ./src/database/config/ormconfig.ts migration:generate -n"
   },
   "dependencies": {
     "@nestjs/common": "^7.6.15",

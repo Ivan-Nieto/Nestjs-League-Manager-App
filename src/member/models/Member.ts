@@ -50,7 +50,7 @@ export class Member {
   ) {
     if (!details) return;
 
-    // Set object variables if they are in details
+    // Set this objects variables if they are in details
     [
       'id',
       'role',
@@ -108,8 +108,6 @@ export class Member {
 
     // Member config
     member.id = this._id;
-    if (!this._person_id) this._person_id = uuidv4();
-    member.person_id = this._person_id;
     member.role = this._role;
     member.status = this._status || 'unknown';
     member.balance = this._balance || 0;
@@ -117,7 +115,6 @@ export class Member {
     member.stats = this._stats || { shots_on_goal: 0 };
 
     // Person config
-    person.id = this._person_id;
     person.name = this._name;
     person.last_name = this._last_name;
     person.phone = this._phone;
@@ -130,26 +127,55 @@ export class Member {
       .save(person)
       .catch((error) => {
         console.error(error);
-        console.error(person);
         throw new HttpException('Failed to save new person', 500);
       });
 
     // Save new member to db
-    const memberObject = await this.connection.manager
+    const { error, newMember: memberObject } = await this.connection.manager
       .save(member)
+      .then((newMember) => {
+        return { newMember, error: false };
+      })
       .catch((error) => {
         console.error(error);
-        console.error(member);
-
-        // Delete person
-        this.connection.delete(personObject.id);
-
-        throw new HttpException('Failed to save new member', 500);
+        return { error: true, newMember: {} };
       });
+
+    // Catch failure to add member entry
+    if (error) {
+      //   // Delete person
+      //   await this.connection.delete(personObject.id).catch((err) => {
+      //     console.error(err);
+      //     throw new HttpException(
+      //       'Failed to save new member and failed to revert creation of person',
+      //       500,
+      //     );
+      //   });
+
+      throw new HttpException('Failed to save new member', 500);
+    }
 
     return {
       member: memberObject,
       person: personObject,
+    };
+  }
+
+  public toObject() {
+    return {
+      id: this._id,
+      role: this._role,
+      status: this._status,
+      balance: this._balance,
+      team_id: this._team_id,
+      stats: this._stats,
+      person_id: this._person_id,
+      name: this._name,
+      last_name: this._last_name,
+      phone: this._phone,
+      email: this._email,
+      dob: this._dob,
+      age: this._age,
     };
   }
 }

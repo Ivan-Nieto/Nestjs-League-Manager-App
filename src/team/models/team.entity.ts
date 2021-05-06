@@ -4,7 +4,7 @@ import { Member } from '../../member/models/member.entity';
 
 @Entity()
 export class Team {
-  @PrimaryColumn()
+  @PrimaryColumn({ type: 'uuid' })
   @IsUUID()
   id: string;
 
@@ -12,12 +12,12 @@ export class Team {
   @IsString()
   name: string;
 
-  @Column()
+  @Column({ type: 'uuid' })
   @IsUUID()
   @OneToOne(() => Member)
   coach: string;
 
-  @Column()
+  @Column({ type: 'uuid' })
   @IsOptional()
   @IsUUID()
   @OneToOne(() => Member)
@@ -39,5 +39,15 @@ export class Team {
     ['id', 'name', 'coach', 'captain', 'status'].forEach((e) =>
       config[e] == null ? null : (this[e] = config[e]),
     );
+  }
+
+  public toObject() {
+    return {
+      id: this.id,
+      name: this.name,
+      coach: this.coach,
+      captain: this.captain,
+      status: this.status,
+    };
   }
 }

@@ -1,6 +1,6 @@
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import validObject from '../../utils/validObject';
-import { MemberDto } from '../member.dto';
+import { Person } from '../../person/models/person.entity';
 import { validate } from 'class-validator';
 
 export class PatchMemberStatusValidationPipe extends ValidationPipe {
@@ -8,7 +8,7 @@ export class PatchMemberStatusValidationPipe extends ValidationPipe {
     if (!validObject(value))
       throw new BadRequestException('Invalid request body');
 
-    const member = new MemberDto();
+    const member = new Person();
     member.status = value.status;
 
     await validate(member, {

@@ -13,7 +13,10 @@ export class PersonController {
 
   @Get()
   getPeople() {
-    return this.personRepository.find();
+    return this.personRepository.find().catch((error) => {
+      console.error(error);
+      throw new HttpException('Failed to fetch person', 500);
+    });
   }
 
   @Get(':personId')

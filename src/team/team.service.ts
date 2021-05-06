@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Team } from './models/team.entity';
 import { Match } from '../match/models/match.entity';
 import { Member } from '../member/models/member.entity';
+import { TeamDto } from './team.dto';
 
 @Injectable()
 export class TeamService {
@@ -18,7 +19,7 @@ export class TeamService {
 
   private async exists(teamId: string) {
     return this.connection
-      .find({ id: teamId })
+      .findOne(teamId)
       .then((data) => {
         if (!data) this.notFound();
         return data;
@@ -32,20 +33,68 @@ export class TeamService {
     return this.connection.find();
   }
 
-  public async createTeam(data: Team) {
-    const team = new Team();
-    team.id = data.id;
-    team.status = data.status;
-    team.name = data.name;
-    team.coach = data.coach;
-    team.captain = data.captain;
+  public async createTeam(data: TeamDto) {
+    const team = new Team(data);
 
-    return this.connection
-      .save(team)
-      .then(() => 'Done')
-      .catch(() => {
-        throw new HttpException('Failed to create team', 500);
-      });
+    // Make sure member is a free-agent or already part of team
+    const partOfTeam = (team_id: string | null, title: string): boolean => {
+      if (team_id == null || team_id === team.id) return true;
+      throw new HttpException(
+        `Cannot assign ${title} from a different team`,
+        400,
+      );
+    };
+
+    const updateMember = async (id: string) =>
+      this.connection.manager
+        .update(Member, id, { team_id: team.id })
+        .catch((error) => {
+          console.error(error);
+          throw new HttpException('Failed to run update', 500);
+        });
+
+    // Make sure coach and captain exists and can be assigned to team
+    let captain;
+    if (data.captain) {
+      captain = await this.connection.manager
+        .findOne(Member, data.captain)
+        .catch((error) => {
+          console.error(error);
+          throw new HttpException('Failed to validate captain', 500);
+        });
+      if (!captain) throw new HttpException('Captain not found', 404);
+      partOfTeam(captain?.team_id, 'captain');
+    }
+
+    let coach;
+    if (data.coach && data.captain !== data.coach) {
+      coach = await this.connection.manager
+        .findOne(Member, data.coach)
+        .catch((error) => {
+          console.error(error);
+          throw new HttpException('Failed to validate coach', 500);
+        });
+      if (!coach) throw new HttpException('Coach not found', 404);
+      partOfTeam(coach?.team_id, 'coach');
+    }
+
+    // Create team
+    await this.connection.save(team).catch(() => {
+      throw new HttpException('Failed to create team', 500);
+    });
+
+    // Assign coach/captain to this team
+    try {
+      if (captain && captain.team_id == null) await updateMember(captain.id);
+      if (coach && coach.team_id == null && data.captain !== data.coach)
+        await updateMember(coach.id);
+    } catch (error) {
+      console.error(error);
+      await this.connection.delete(team.id).catch(console.error);
+      throw new HttpException('Failed to update dependent member', 500);
+    }
+
+    return 'Done';
   }
 
   public async getTeam(teamId: string) {

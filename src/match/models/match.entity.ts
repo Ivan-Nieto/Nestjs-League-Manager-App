@@ -1,34 +1,41 @@
-import { IsNotEmpty, Min } from 'class-validator';
+import { IsDate, IsNotEmpty, IsString, IsUUID, Min } from 'class-validator';
 import { Column, Entity, OneToOne, PrimaryColumn } from 'typeorm';
 import { Team } from '../../team/models/team.entity';
 
 @Entity()
 export class Match {
-  @PrimaryColumn()
+  @PrimaryColumn({ type: 'uuid' })
+  @IsUUID()
   id: string;
 
-  @Column()
+  @Column({ type: 'uuid' })
   @IsNotEmpty()
+  @IsUUID()
   @OneToOne(() => Team)
   home: string;
 
-  @Column()
+  @Column({ type: 'uuid' })
   @IsNotEmpty()
+  @IsUUID()
   @OneToOne(() => Team)
   team: string;
 
   @Column()
+  @IsNotEmpty()
   @Min(0)
   'home-score': number;
 
   @Column()
+  @IsNotEmpty()
   @Min(0)
   'away-score': number;
 
   @Column()
+  @IsDate()
   played: Date;
 
   @Column()
+  @IsString()
   location: 'active' | 'inactive';
 
   constructor(config?: {

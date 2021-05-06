@@ -4,8 +4,6 @@ import { Repository } from 'typeorm';
 
 import { UpdateObject } from './validationPipes/UpdateMemberValidationPipe';
 import { Member as MemberEntity } from './models/member.entity';
-import { Member } from './models/Member';
-import { Person } from '../person/models/person.entity';
 
 @Injectable()
 export class MemberService {
@@ -18,38 +16,36 @@ export class MemberService {
     throw new HttpException('Not Found', 404);
   }
 
-  async createMember(config: Record<string, any>) {
-    const member = new Member(this.connection, config);
-
-    await member.create();
-
-    return 'Done';
+  private internal(error?: any): never {
+    if (error) console.error(error);
+    throw new HttpException('Internal Error', 500);
   }
 
-  public getMembers() {
+  public async createMember(config: Record<string, any>) {
+    const member = new MemberEntity(config);
+
     return this.connection
-      .createQueryBuilder('m')
-      .select(['*', 'm.id AS id'])
-      .innerJoin(Person, 'p', 'm.person_id = p.id')
-      .getRawMany()
-      .catch(console.error);
+      .save(member)
+      .then(() => 'Done')
+      .catch((error) => {
+        console.error(error);
+        throw new HttpException('Failed to create new member', 500);
+      });
+  }
+
+  public async getMembers() {
+    return this.connection.find().catch(this.internal);
   }
 
   public async getMember(memberId: string) {
-    const member = await this.connection
-      .createQueryBuilder('m')
-      .select(['*', 'm.id AS id'])
-      .innerJoin(Person, 'p', 'm.person_id = p.id')
-      .where('m.id = :memberId', { memberId })
-      .getRawOne()
-      .catch(console.error);
+    const member = await this.connection.findOne(memberId).catch(this.internal);
 
     if (!member) throw new HttpException('Not Found', 404);
 
     return member;
   }
 
-  public getFreeAgents() {
+  public async getFreeAgents() {
     return this.connection.find({ where: { team_id: null } });
   }
 
@@ -108,12 +104,10 @@ export class MemberService {
 
     // Update person
     if (Object.keys(personFields).length)
-      await this.connection.manager
-        .update(Person, { id: member.person_id }, personFields)
-        .catch((error) => {
-          console.error(error);
-          throw new HttpException('Failed to update person', 500);
-        });
+      await this.connection.update(memberId, personFields).catch((error) => {
+        console.error(error);
+        throw new HttpException('Failed to update person', 500);
+      });
 
     return 'Done';
   }
@@ -126,7 +120,7 @@ export class MemberService {
 
     if (!member) this.notFound();
 
-    await this.connection
+    return this.connection
       .delete({ id: memberId })
       .then((data) => {
         if (data.affected === 0)
@@ -137,19 +131,6 @@ export class MemberService {
       .catch((error) => {
         console.error(error);
         throw new HttpException('Failed to delete member', 500);
-      });
-
-    return this.connection.manager
-      .delete(Person, { id: member.person_id })
-      .then((data) => {
-        if (data.affected === 0)
-          throw new HttpException('Failed to delete person', 500);
-
-        return 'Done';
-      })
-      .catch((error) => {
-        console.error(error);
-        throw new HttpException('Failed to delete person', 500);
       });
   }
 

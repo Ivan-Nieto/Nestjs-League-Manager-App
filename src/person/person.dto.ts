@@ -12,7 +12,8 @@ import {
 
 export class PersonDto {
   @IsUUID()
-  id: string;
+  @IsOptional()
+  id?: string;
 
   @IsString()
   @MinLength(3)
@@ -24,20 +25,28 @@ export class PersonDto {
 
   @IsPhoneNumber()
   @IsOptional()
-  phone: number;
+  phone?: number;
 
   @IsEmail()
   @IsOptional()
-  email: string;
+  email?: string;
 
   @IsNotEmpty()
   @IsOptional()
-  dob: string;
+  dob?: string;
+
+  @IsOptional()
+  @IsString()
+  role?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
 
   @IsInt()
   @Min(0)
   @IsOptional()
-  age: number;
+  age?: number;
 
   constructor(config?: {
     id?: string;
@@ -46,11 +55,22 @@ export class PersonDto {
     phone?: number;
     email?: string;
     dob?: string;
+    role?: string;
+    status?: string;
+    age?: number;
   }) {
     if (!config || Object.keys(config).length === 0) return;
 
-    ['id', 'name', 'last_name', 'phone', 'email', 'dob'].forEach((e) =>
-      config[e] == null ? null : (this[e] = config[e]),
-    );
+    [
+      'id',
+      'name',
+      'last_name',
+      'phone',
+      'email',
+      'dob',
+      'role',
+      'status',
+      'age',
+    ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
   }
 }
