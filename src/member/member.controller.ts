@@ -10,12 +10,10 @@ import {
 import { MemberIdValidationPipe } from './validationPipes/MemberIdValidationPipe';
 import { CreateMemberValidationPipe } from './validationPipes/CreateMemberValidationPipe';
 import { PaymentValidationPipe } from './validationPipes/PaymentValidationPipe';
-import {
-  UpdateMemberValidationPipe,
-  UpdateObject,
-} from './validationPipes/UpdateMemberValidationPipe';
+import { UpdateMemberValidationPipe } from './validationPipes/UpdateMemberValidationPipe';
 import { MemberService } from './member.service';
-import { MemberDto } from './member.dto';
+import { UpdatePersonStatusDto } from '../person/person.dto';
+import { PostMemberDto, PatchMemberDto, PostPaymentDto } from './member.dto';
 import { PatchMemberStatusValidationPipe } from './validationPipes/PatchMemberStatusValidationPipe';
 
 @Controller('member')
@@ -38,30 +36,30 @@ export class MemberController {
   }
 
   @Post()
-  addMember(@Body(CreateMemberValidationPipe) member: MemberDto) {
+  addMember(@Body(CreateMemberValidationPipe) member: PostMemberDto) {
     return this.memberService.createMember(member);
   }
 
   @Post('/:memberId/payment')
   addMemberPayment(
     @Param('memberId', MemberIdValidationPipe) memberId: string,
-    @Body(PaymentValidationPipe) payment: number,
+    @Body(PaymentValidationPipe) payment: PostPaymentDto,
   ) {
-    return this.memberService.makePayment(memberId, payment);
+    return this.memberService.makePayment(memberId, payment.amount);
   }
 
   @Patch(':memberId/status')
   patchStatus(
     @Param('memberId', MemberIdValidationPipe) memberId: string,
-    @Body(PatchMemberStatusValidationPipe) status: string,
+    @Body(PatchMemberStatusValidationPipe) data: UpdatePersonStatusDto,
   ) {
-    return this.memberService.patchUserStatus(memberId, status);
+    return this.memberService.patchUserStatus(memberId, data.status);
   }
 
   @Patch('/:memberId')
   patchMember(
     @Param('memberId', MemberIdValidationPipe) memberId: string,
-    @Body(UpdateMemberValidationPipe) data: UpdateObject,
+    @Body(UpdateMemberValidationPipe) data: PatchMemberDto,
   ) {
     return this.memberService.updateMember(memberId, data);
   }

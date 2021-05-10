@@ -1,28 +1,18 @@
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import validObject from '../../utils/validObject';
-import { Person } from '../../person/models/person.entity';
-import { validate } from 'class-validator';
+import { UpdatePersonStatusDto } from '../../person/person.dto';
+import validateEntity from 'src/utils/validateEntity';
 
 export class PatchMemberStatusValidationPipe extends ValidationPipe {
   async transform(value: any) {
     if (!validObject(value))
       throw new BadRequestException('Invalid request body');
 
-    const member = new Person();
-    member.status = value.status;
+    const member = new UpdatePersonStatusDto(value.status);
 
-    await validate(member, {
-      skipMissingProperties: true,
-      forbidUnknownValues: true,
-    })
-      .then((errors) => {
-        if (errors.length) throw new BadRequestException('Invalid status');
-      })
-      .catch((error) => {
-        console.error(error);
-        throw new BadRequestException('Invalid status');
-      });
+    const { valid } = await validateEntity(member);
+    if (!valid) throw new BadRequestException('Invalid status');
 
-    return value.status;
+    return { status: value.status };
   }
 }

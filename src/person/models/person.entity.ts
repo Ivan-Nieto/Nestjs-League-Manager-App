@@ -78,4 +78,17 @@ export class Person {
       'age',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
   }
+
+  /**
+   * @description Object representation of entity
+   */
+  public toObject(): Record<keyof this, any> {
+    return Object.keys(this).reduce(
+      (prev, curr) => ({
+        ...prev,
+        [curr]: this[curr],
+      }),
+      {} as any,
+    );
+  }
 }

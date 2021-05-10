@@ -1,38 +1,80 @@
-import { IsInt, Min, IsString, IsOptional, IsUUID } from 'class-validator';
+import {
+  Min,
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsNotEmpty,
+} from 'class-validator';
+import validObject from 'src/utils/validObject';
+import { PickType } from '@nestjs/swagger';
 
-export class StatsDto {
-  @IsInt()
-  @Min(0)
-  shots_on_goal: number;
+import {
+  UpdatePersonDto,
+  CreatePersonDto,
+  PersonDto,
+} from '../person/person.dto';
+
+export class MemberIdDto extends PickType(PersonDto, ['id']) {
+  constructor(id: string) {
+    super();
+    this.id = id;
+  }
 }
 
-export class MemberDto {
-  @IsUUID()
-  @IsOptional()
-  id: string;
-
-  @IsInt()
-  @IsOptional()
+export class PostMemberDto extends CreatePersonDto {
+  @IsNumber()
   @Min(0)
+  @IsOptional()
   balance?: number;
 
   @IsString()
   @IsOptional()
-  team_id?: string;
+  team_id?: string | null;
 
+  @IsNotEmpty()
   @IsOptional()
-  stats?: StatsDto;
+  stats?: {
+    shots_on_goal?: number;
+    [key: string]: any;
+  };
 
-  constructor(config?: {
-    id?: string;
-    balance?: number;
-    team_id?: string;
-    stats?: StatsDto;
-  }) {
-    if (!config || Object.keys(config).length === 0) return;
-
-    ['id', 'balance', 'team_id', 'stats'].forEach((e) =>
-      config[e] == null ? null : (this[e] = config[e]),
+  constructor(data: Record<string, any>) {
+    super(data);
+    if (!validObject(data)) return;
+    ['balance', 'team_id', 'stats'].forEach((e) =>
+      data[e] == null ? null : (this[e] = data[e]),
     );
   }
+}
+
+export class PatchMemberDto extends UpdatePersonDto {
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  balance?: number;
+
+  @IsString()
+  @IsOptional()
+  team_id?: string | null;
+
+  @IsNotEmpty()
+  @IsOptional()
+  stats?: {
+    shots_on_goal?: number;
+    [key: string]: any;
+  };
+
+  constructor(data: Record<string, any>) {
+    super(data);
+    if (!validObject(data)) return;
+    ['balance', 'team_id', 'stats'].forEach((e) =>
+      data[e] == null ? null : (this[e] = data[e]),
+    );
+  }
+}
+
+export class PostPaymentDto {
+  @IsNumber()
+  @Min(0)
+  amount: number;
 }

@@ -27,6 +27,6 @@ export class PaymentValidationPipe extends ValidationPipe {
         throw new BadRequestException('Invalid amount');
       });
 
-    return value.amount;
+    return val;
   }
 }

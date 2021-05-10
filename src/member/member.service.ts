@@ -2,27 +2,61 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { UpdateObject } from './validationPipes/UpdateMemberValidationPipe';
-import { Member as MemberEntity } from './models/member.entity';
+import { Member } from './models/member.entity';
+import { PatchMemberDto, PostMemberDto } from './member.dto';
 
 @Injectable()
 export class MemberService {
   constructor(
-    @InjectRepository(MemberEntity)
-    private connection: Repository<MemberEntity>,
+    @InjectRepository(Member)
+    private connection: Repository<Member>,
   ) {}
 
-  private notFound(): never {
-    throw new HttpException('Not Found', 404);
+  /**
+   * @description Finds member by it's uuid and throws 404 error if not found
+   *
+   * @param {string} memberId Member uuid
+   * @returns {Member}
+   */
+  private async exists(memberId: string): Promise<Member> {
+    const member = await this.connection.findOne(memberId).catch((error) => {
+      console.error(error);
+      throw new HttpException('Failed to validate member', 500);
+    });
+
+    if (!member) this.notFound();
+    return member;
   }
 
+  /**
+   * @description Throws a 404 error
+   * @throws
+   *
+   * @param {string} [message] Error message
+   */
+  private notFound(message?: string): never {
+    throw new HttpException(message || 'Not Found', 404);
+  }
+
+  /**
+   * @description Logs and throws internal error
+   * @throws
+   *
+   * @param {Error} [error] Error object
+   */
   private internal(error?: any): never {
     if (error) console.error(error);
     throw new HttpException('Internal Error', 500);
   }
 
-  public async createMember(config: Record<string, any>) {
-    const member = new MemberEntity(config);
+  /**
+   * @description Creates a new member
+   *
+   * @param {PostMemberDto} config New Member information
+   * @returns {string} Done
+   */
+  public async createMember(config: PostMemberDto): Promise<string> {
+    const member = new Member(config);
 
     return this.connection
       .save(member)
@@ -33,11 +67,22 @@ export class MemberService {
       });
   }
 
-  public async getMembers() {
+  /**
+   * @description Gets all members
+   *
+   * @returns {Array<Member>}
+   */
+  public async getMembers(): Promise<Array<Member>> {
     return this.connection.find().catch(this.internal);
   }
 
-  public async getMember(memberId: string) {
+  /**
+   * @description Finds a member by it's uuid
+   *
+   * @param {string} memberId Member uuid
+   * @returns {Member}
+   */
+  public async getMember(memberId: string): Promise<Member> {
     const member = await this.connection.findOne(memberId).catch(this.internal);
 
     if (!member) throw new HttpException('Not Found', 404);
@@ -45,14 +90,25 @@ export class MemberService {
     return member;
   }
 
-  public async getFreeAgents() {
+  /**
+   * @description Finds all free agents (members with no team)
+   *
+   * @returns {Array<Member>} All Members with no defined team_id
+   */
+  public async getFreeAgents(): Promise<Array<Member>> {
     return this.connection.find({ where: { team_id: null } });
   }
 
-  public async makePayment(memberId: string, amount: number) {
+  /**
+   * @description Increments a Members balance by a given amount
+   *
+   * @param {string} memberId Member uuid
+   * @param {number} amount Amount to increment balance by
+   * @returns {string} Done
+   */
+  public async makePayment(memberId: string, amount: number): Promise<string> {
     // Make sure member exists
-    const member = await this.connection.findOne(memberId).catch(this.notFound);
-    if (!Boolean(member)) this.notFound();
+    const member = await this.exists(memberId);
 
     // Get updated balance
     const newBalance = (member.balance || 0) + amount;
@@ -66,75 +122,64 @@ export class MemberService {
       });
   }
 
-  public async updateMember(memberId: string, data: UpdateObject) {
+  /**
+   * @description Updates a Members information
+   *
+   * @param {string} memberId Member uuid
+   * @param {PatchMemberDto} data Member update data
+   * @returns {string} Done
+   */
+  public async updateMember(
+    memberId: string,
+    data: PatchMemberDto,
+  ): Promise<string> {
     // Make sure member exists
-    const member = await this.connection.findOne(memberId).catch(this.notFound);
-    if (!member) this.notFound();
+    await this.exists(memberId);
 
-    // Extract fields from object
-    const extract = (fields: string[]): Record<string, any> => {
-      const tempObj: Record<string, any> = {};
-      fields.forEach((k) => (data[k] == null ? null : (tempObj[k] = data[k])));
-      return tempObj;
-    };
-
-    // Separate member and person data
-    const memberFields = extract([
-      'role',
-      'status',
-      'balance',
-      'team_id',
-      'stats',
-    ]);
-    const personFields = extract([
-      'name',
-      'last_name',
-      'phone',
-      'email',
-      'dob',
-      'age',
-    ]);
-
-    // Update member
-    if (Object.keys(memberFields).length)
-      await this.connection.update(memberId, memberFields).catch((error) => {
+    return this.connection
+      .update(memberId, data)
+      .then(() => 'Done')
+      .catch((error) => {
         console.error(error);
         throw new HttpException('Failed to update member', 500);
       });
-
-    // Update person
-    if (Object.keys(personFields).length)
-      await this.connection.update(memberId, personFields).catch((error) => {
-        console.error(error);
-        throw new HttpException('Failed to update person', 500);
-      });
-
-    return 'Done';
   }
 
-  public async deleteMember(memberId: string) {
+  /**
+   * @description Deletes a member
+   *
+   * @param {string} memberId Member uuid
+   * @returns {string} Done
+   */
+  public async deleteMember(memberId: string): Promise<string> {
     // Make sure member exists
-    const member = await this.connection
-      .findOne({ id: memberId })
-      .catch(this.notFound);
+    await this.exists(memberId);
 
-    if (!member) this.notFound();
+    const failure = new HttpException('Failed to delete member', 500);
 
     return this.connection
-      .delete({ id: memberId })
+      .delete(memberId)
       .then((data) => {
-        if (data.affected === 0)
-          throw new HttpException('Failed to delete member', 500);
-
+        if (data.affected === 0) throw failure;
         return 'Done';
       })
       .catch((error) => {
         console.error(error);
-        throw new HttpException('Failed to delete member', 500);
+        throw failure;
       });
   }
 
-  public async patchUserStatus(memberId: string, status: string) {
+  /**
+   * @description Updates a Members status
+   *
+   * @param {string} memberId Member uuid
+   * @param {string} status Member status
+   * @returns {string} Done
+   */
+  public async patchUserStatus(
+    memberId: string,
+    status: string,
+  ): Promise<string> {
     return this.updateMember(memberId, { status });
   }
 }

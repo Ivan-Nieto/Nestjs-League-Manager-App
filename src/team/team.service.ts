@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Team } from './models/team.entity';
 import { Match } from '../match/models/match.entity';
 import { Member } from '../member/models/member.entity';
-import { TeamDto } from './team.dto';
+import { CreateTeamDto, PatchTeamDto } from './team.dto';
 
 @Injectable()
 export class TeamService {
@@ -13,27 +13,50 @@ export class TeamService {
     private connection: Repository<Team>,
   ) {}
 
-  private notFound(): never {
-    throw new HttpException('Not Found', 404);
+  /**
+   * @description Throws a not found error
+   * @throws
+   *
+   * @param {string} [message] Error message
+   */
+  private notFound(message?: string): never {
+    throw new HttpException(message || 'Not Found', 404);
   }
 
-  private async exists(teamId: string) {
-    return this.connection
-      .findOne(teamId)
-      .then((data) => {
-        if (!data) this.notFound();
-        return data;
-      })
-      .catch(() => {
-        this.notFound();
-      });
+  /**
+   * @description Finds a Team by uuid and throws a 404 error if not found
+   * @throws
+   *
+   * @param {string} teamId Team uuid
+   * @returns {Team}
+   */
+  private async exists(teamId: string): Promise<Team> {
+    const data = await this.connection.findOne(teamId).catch((error) => {
+      console.error(error);
+      this.notFound();
+    });
+    if (!data) this.notFound();
+    return data;
   }
 
-  public async getTeams() {
+  /**
+   * @description Gets all Teams
+   * @throws
+   *
+   * @returns {Array<Team>}
+   */
+  public async getTeams(): Promise<Array<Team>> {
     return this.connection.find();
   }
 
-  public async createTeam(data: TeamDto) {
+  /**
+   * @description Creates a new Team
+   * @throws
+   *
+   * @param {CreateTeamDto} data Team information
+   * @returns {string}
+   */
+  public async createTeam(data: CreateTeamDto): Promise<string> {
     const team = new Team(data);
 
     // Make sure member is a free-agent or already part of team
@@ -97,18 +120,45 @@ export class TeamService {
     return 'Done';
   }
 
-  public async getTeam(teamId: string) {
+  /**
+   * @description Finds Team by uuid
+   * @throws
+   *
+   * @param {string} teamId Team uuid
+   * @returns {Team}
+   */
+  public async getTeam(teamId: string): Promise<Team> {
     return this.exists(teamId);
   }
 
-  public async getTeamMatches(teamId: string) {
+  /**
+   * @description Gets all Matches played by a given Team
+   * @throws
+   *
+   * @param {string} teamId Team uuid
+   * @returns {Array<Match>}
+   */
+  public async getTeamMatches(teamId: string): Promise<Array<Match>> {
     await this.exists(teamId);
     return this.connection.manager.find(Match, {
       where: [{ home: teamId }, { team: teamId }], // OR
     });
   }
 
-  public async getMembers(team_id: string, status?: string, role?: string) {
+  /**
+   * @description Gets all Members for a given team that match the given optional parameters
+   * @throws
+   *
+   * @param {string} teamId Team uuid
+   * @param {string} [status] Person status
+   * @param {string} [role] Person role
+   * @returns {Array<Member>}
+   */
+  public async getMembers(
+    team_id: string,
+    status?: string,
+    role?: string,
+  ): Promise<Array<Member>> {
     await this.exists(team_id);
 
     return this.connection.manager.find(Member, {
@@ -120,7 +170,21 @@ export class TeamService {
     });
   }
 
-  public async getStats(team_id: string) {
+  /**
+   * @description Gets a given Teams statistics
+   * @throws
+   *
+   * @param {string} teamId Team uuid
+   * @returns {{wins, losses, matches, players}}
+   */
+  public async getStats(
+    team_id: string,
+  ): Promise<{
+    wins: number;
+    losses: number;
+    matches: number;
+    players: number;
+  }> {
     // Make sure team exists
     await this.exists(team_id);
 
@@ -172,7 +236,15 @@ export class TeamService {
     };
   }
 
-  public async updateTeam(teamId: string, data: Record<string, any>) {
+  /**
+   * @description Updates a Team
+   * @throws
+   *
+   * @param {string} teamId Team uuid
+   * @param {PatchTeamDto} data Update data
+   * @returns {string}
+   */
+  public async updateTeam(teamId: string, data: PatchTeamDto): Promise<string> {
     // Make sure team exists
     await this.exists(teamId);
 
@@ -183,7 +255,7 @@ export class TeamService {
 
     const checkUser = (mem: string, member: any) => {
       if (!member) throw new HttpException(`${mem} not found`, 404);
-      if (member.team_id !== teamId)
+      if (member.team_id && member.team_id !== teamId)
         throw new HttpException(`Cannot assign ${mem} from another team`, 400);
       return member;
     };
@@ -204,24 +276,48 @@ export class TeamService {
       checkUser('coach', coach);
     }
 
-    return this.connection
-      .update(teamId, data)
-      .then(() => 'Done')
-      .catch(internal);
+    await this.connection.update(teamId, data).catch(internal);
+
+    const updateMember = async (id: string) =>
+      this.connection.manager
+        .update(Member, id, { team_id: teamId })
+        .catch((error) => {
+          console.error(error);
+          throw new HttpException('Failed to update team member', 500);
+        });
+
+    // Update captain if necessary
+    if (data.captain) await updateMember(data.captain);
+
+    // Update coach if necessary
+    if (data.coach) await updateMember(data.coach);
+
+    return 'Done';
   }
 
-  public async deleteTeam(teamId: string) {
+  /**
+   * @description Deletes a given Team
+   * @throws
+   *
+   * @param {string} teamId Team uuid
+   * @returns {string}
+   */
+  public async deleteTeam(teamId: string): Promise<string> {
     await this.exists(teamId);
-    return this.connection
-      .delete(teamId)
-      .then(() => 'Done')
+
+    // Update all member accounts belonging to this team
+    await this.connection.manager
+      .update(Member, { team_id: teamId }, { team_id: null })
       .catch((error) => {
         console.error(error);
-        throw new HttpException('Failed to delete team', 500);
+        throw new HttpException('Failed to update team members', 500);
       });
-  }
 
-  public notImplemented() {
-    throw new HttpException('Not Implemented', 500);
+    await this.connection.delete(teamId).catch((error) => {
+      console.error(error);
+      throw new HttpException('Failed to delete team', 500);
+    });
+
+    return 'Done';
   }
 }

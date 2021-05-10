@@ -11,10 +11,10 @@ export class initTables1620330641774 implements MigrationInterface {
       `CREATE INDEX "IDX_7968479009dcf6ffc61af19ae2" ON "person" ("type") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "team" ("id" uuid NOT NULL, "name" character varying NOT NULL, "coach" uuid NOT NULL, "captain" uuid, "status" character varying NOT NULL, CONSTRAINT "PK_f57d8293406df4af348402e4b74" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "team" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "coach" uuid NOT NULL, "captain" uuid, "status" character varying NOT NULL, CONSTRAINT "PK_f57d8293406df4af348402e4b74" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "match" ("id" uuid NOT NULL, "home" uuid NOT NULL, "team" uuid NOT NULL, "home-score" integer NOT NULL, "away-score" integer NOT NULL, "played" TIMESTAMP NOT NULL, "location" character varying NOT NULL, CONSTRAINT "PK_92b6c3a6631dd5b24a67c69f69d" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "match" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "home" uuid NOT NULL, "team" uuid NOT NULL, "home-score" integer NOT NULL, "away-score" integer NOT NULL, "played" TIMESTAMP NOT NULL, "location" character varying NOT NULL, CONSTRAINT "PK_92b6c3a6631dd5b24a67c69f69d" PRIMARY KEY ("id"))`,
     );
   }
 

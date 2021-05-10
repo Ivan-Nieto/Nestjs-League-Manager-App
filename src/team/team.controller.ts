@@ -11,11 +11,12 @@ import {
 import { TeamService } from './team.service';
 import { TeamIdValidationPipe } from './validationPipes/TeamIdValidationPipe';
 import { CreateTeamValidationPipe } from './validationPipes/CreateTeamValidationPipe';
-import { TeamDto } from './team.dto';
+import { CreateTeamDto, PatchTeamDto, PatchStatusDto } from './team.dto';
 import { StatusValidationPipe } from './validationPipes/StatusValidationPipe';
 import { RoleValidationPipe } from './validationPipes/RoleValidationPipe';
 import { PatchTeamValidationPipe } from './validationPipes/PatchTeamValidationPipe';
 import { PatchTeamStatusValidationPipe } from './validationPipes/PatchTeamStatusValidationPipe';
+import { ApiQuery } from '@nestjs/swagger';
 
 @Controller('team')
 export class TeamController {
@@ -27,7 +28,7 @@ export class TeamController {
   }
 
   @Post()
-  addTeam(@Body(CreateTeamValidationPipe) team: TeamDto) {
+  addTeam(@Body(CreateTeamValidationPipe) team: CreateTeamDto) {
     return this.teamService.createTeam(team);
   }
 
@@ -42,9 +43,12 @@ export class TeamController {
   }
 
   @Get(':teamId/member')
+  @ApiQuery({ required: false, name: 'status', type: 'string' })
+  @ApiQuery({ required: false, name: 'role', type: 'string' })
   getTeamMembers(
     @Param('teamId', TeamIdValidationPipe) teamId: string,
-    @Query('status', StatusValidationPipe) status?: string,
+    @Query('status', StatusValidationPipe)
+    status?: string,
     @Query('role', RoleValidationPipe) role?: string,
   ) {
     return this.teamService.getMembers(teamId, status, role);
@@ -58,7 +62,7 @@ export class TeamController {
   @Patch(':teamId')
   patchTeam(
     @Param('teamId', TeamIdValidationPipe) teamId: string,
-    @Body(PatchTeamValidationPipe) config: Partial<TeamDto>,
+    @Body(PatchTeamValidationPipe) config: PatchTeamDto,
   ) {
     return this.teamService.updateTeam(teamId, config);
   }
@@ -66,9 +70,9 @@ export class TeamController {
   @Patch(':teamId/status')
   patchStatus(
     @Param('teamId', TeamIdValidationPipe) teamId: string,
-    @Body(PatchTeamStatusValidationPipe) status: string,
+    @Body(PatchTeamStatusValidationPipe) data: PatchStatusDto,
   ) {
-    return this.teamService.updateTeam(teamId, { status });
+    return this.teamService.updateTeam(teamId, data);
   }
 
   @Delete(':teamId')

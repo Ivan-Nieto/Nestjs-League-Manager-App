@@ -1,10 +1,10 @@
 import { IsOptional, IsString, IsUUID } from 'class-validator';
-import { Column, Entity, OneToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Member } from '../../member/models/member.entity';
 
 @Entity()
 export class Team {
-  @PrimaryColumn({ type: 'uuid' })
+  @PrimaryGeneratedColumn('uuid')
   @IsUUID()
   id: string;
 
@@ -41,13 +41,16 @@ export class Team {
     );
   }
 
-  public toObject() {
-    return {
-      id: this.id,
-      name: this.name,
-      coach: this.coach,
-      captain: this.captain,
-      status: this.status,
-    };
+  /**
+   * @description Object representation of entity
+   */
+  public toObject(): Record<keyof this, any> {
+    return Object.keys(this).reduce(
+      (prev, curr) => ({
+        ...prev,
+        [curr]: this[curr],
+      }),
+      {} as any,
+    );
   }
 }

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Match } from './models/match.entity';
 import { Team } from '../team/models/team.entity';
-import { MatchDto } from './match.dto';
+import { CreateMatchDto, PatchMatchDto } from './match.dto';
 
 @Injectable()
 export class MatchService {
@@ -12,24 +12,46 @@ export class MatchService {
     private connection: Repository<Match>,
   ) {}
 
+  /**
+   * @description Throws a 404 not found error
+   * @private
+   *
+   * @param {string} [message] Error message body
+   */
   private notFound(message?: string): never {
     throw new HttpException(message || 'Not Found', 404);
   }
 
-  private async exists(matchId: string) {
-    return this.connection
-      .findOne(matchId)
-      .then((m) => {
-        if (!m) this.notFound('Match not found');
-        return m;
-      })
-      .catch((error) => {
-        console.error(error);
-        this.notFound('Match not found');
-      });
+  /**
+   * @description Finds a match by id and throws a 404 error if not found
+   * @private
+   *
+   * @param {string} matchId Match uuid
+   * @returns {Match}
+   */
+  private async exists(matchId: string): Promise<Match> {
+    const match = await this.connection.findOne(matchId).catch((error) => {
+      console.error(error);
+      this.notFound('Match not found');
+    });
+    if (!match) this.notFound('Match not found');
+    return match;
   }
 
-  public async addMatch(data: MatchDto) {
+  /**
+   * @description Creates a match
+   *
+   * @param {CreateMatchDto} data Match data
+   * @returns {string} Done
+   */
+  public async addMatch(data: CreateMatchDto): Promise<string> {
+    // Make sure home and away team are different
+    if (data.home === data.team)
+      throw new HttpException(
+        'Cannot create match with identical away and home team',
+        400,
+      );
+
     // Make sure home team exists
     await this.connection.manager
       .findOne(Team, { id: data.home })
@@ -53,15 +75,36 @@ export class MatchService {
       });
   }
 
-  public getAllMatches() {
+  /**
+   * @description Gets all matches
+   *
+   * @returns {Array<Match>} All matches
+   */
+  public getAllMatches(): Promise<Array<Match>> {
     return this.connection.find();
   }
 
-  public async getMatch(matchId: string) {
+  /**
+   * @description Finds a match by it's uuid
+   *
+   * @param {string} matchId Match uuid
+   * @returns {Match}
+   */
+  public async getMatch(matchId: string): Promise<Match> {
     return this.exists(matchId);
   }
 
-  public async updateMatch(matchId: string, data: Partial<MatchDto>) {
+  /**
+   * @description Updates match data
+   *
+   * @param {string} matchId Match uuid
+   * @param {PatchMemberDto} data Update data
+   * @returns {string} Done
+   */
+  public async updateMatch(
+    matchId: string,
+    data: PatchMatchDto,
+  ): Promise<string> {
     // Make sure match exists
     await this.exists(matchId);
 
@@ -95,7 +138,13 @@ export class MatchService {
       });
   }
 
-  public async delete(matchId: string) {
+  /**
+   * @description Deletes a given match
+   *
+   * @param {string} matchId Match uuid
+   * @returns {string} Done
+   */
+  public async delete(matchId: string): Promise<string> {
     await this.exists(matchId);
     return this.connection
       .delete(matchId)

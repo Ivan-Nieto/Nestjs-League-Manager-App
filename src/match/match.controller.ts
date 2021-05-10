@@ -10,7 +10,7 @@ import {
 import { MatchIdValidationPipe } from './validationPipes/MatchIdValidationPipe';
 import { CreateMatchValidationPipe } from './validationPipes/CreateMatchValidationPipe';
 import { MatchService } from './match.service';
-import { MatchDto } from './match.dto';
+import { PatchMatchDto, CreateMatchDto } from './match.dto';
 import { PatchMatchValidationPipe } from './validationPipes/PatchMatchValidationPipe';
 
 @Controller('match')
@@ -23,7 +23,7 @@ export class MatchController {
   }
 
   @Post()
-  addMatch(@Body(CreateMatchValidationPipe) match: MatchDto) {
+  addMatch(@Body(CreateMatchValidationPipe) match: CreateMatchDto) {
     return this.matchService.addMatch(match);
   }
 
@@ -35,7 +35,7 @@ export class MatchController {
   @Patch(':matchId')
   patchMatch(
     @Param('matchId', MatchIdValidationPipe) matchId: string,
-    @Body(PatchMatchValidationPipe) config: Partial<MatchDto>,
+    @Body(PatchMatchValidationPipe) config: PatchMatchDto,
   ) {
     return this.matchService.updateMatch(matchId, config);
   }

@@ -1,10 +1,10 @@
 import { IsDate, IsNotEmpty, IsString, IsUUID, Min } from 'class-validator';
-import { Column, Entity, OneToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Team } from '../../team/models/team.entity';
 
 @Entity()
 export class Match {
-  @PrimaryColumn({ type: 'uuid' })
+  @PrimaryGeneratedColumn('uuid')
   @IsUUID()
   id: string;
 
@@ -58,5 +58,18 @@ export class Match {
       'played',
       'location',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
+  }
+
+  /**
+   * @description Object representation of entity
+   */
+  public toObject(): Record<keyof this, any> {
+    return Object.keys(this).reduce(
+      (prev, curr) => ({
+        ...prev,
+        [curr]: this[curr],
+      }),
+      {} as any,
+    );
   }
 }

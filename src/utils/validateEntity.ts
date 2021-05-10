@@ -1,10 +1,7 @@
 import { validate } from 'class-validator';
 
 export const validateEntity = async (entity: any) =>
-  validate(entity, {
-    skipMissingProperties: true,
-    skipNullProperties: true,
-  })
+  validate(entity)
     .then((errors) => {
       return {
         valid: !Boolean(errors?.length),
