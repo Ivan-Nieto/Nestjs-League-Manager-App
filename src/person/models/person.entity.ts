@@ -4,8 +4,8 @@ import {
   IsPhoneNumber,
   IsString,
   IsUUID,
-  Min,
 } from 'class-validator';
+import validObject from '../../utils/validObject';
 import {
   TableInheritance,
   Column,
@@ -40,7 +40,7 @@ export class Person {
 
   @Column()
   @IsOptional()
-  dob?: Date | null;
+  dob: Date;
 
   @Column()
   @IsString()
@@ -50,11 +50,6 @@ export class Person {
   @IsString()
   status: string;
 
-  @Column()
-  @Min(0)
-  @IsOptional()
-  age?: number | null;
-
   constructor(config?: {
     name?: string;
     last_name?: string;
@@ -63,9 +58,8 @@ export class Person {
     dob?: Date;
     role?: string;
     status?: string;
-    age?: number;
   }) {
-    if (!config || Object.keys(config).length === 0) return;
+    if (!validObject(config) || Object.keys(config).length === 0) return;
 
     [
       'name',
@@ -75,7 +69,6 @@ export class Person {
       'dob',
       'role',
       'status',
-      'age',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
   }
 

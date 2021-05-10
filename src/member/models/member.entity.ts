@@ -2,6 +2,7 @@ import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { Person } from '../../person/models/person.entity';
 import { ChildEntity, Column, JoinTable, OneToOne } from 'typeorm';
 import { Team } from '../../team/models/team.entity';
+import validObject from '../../utils/validObject';
 
 @ChildEntity()
 export class Member extends Person {
@@ -24,7 +25,7 @@ export class Member extends Person {
 
   constructor(config?: Record<string, any>) {
     super(config);
-    if (!config || Object.keys(config).length === 0) return;
+    if (!validObject(config) || Object.keys(config).length === 0) return;
 
     ['balance', 'team_id', 'stats'].forEach((e) =>
       config[e] == null ? null : (this[e] = config[e]),

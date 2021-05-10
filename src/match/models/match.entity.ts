@@ -1,4 +1,6 @@
 import { IsDate, IsNotEmpty, IsString, IsUUID, Min } from 'class-validator';
+import { Staff } from '../../staff/models/staff.entity';
+import validObject from '../../utils/validObject';
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Team } from '../../team/models/team.entity';
 
@@ -38,6 +40,12 @@ export class Match {
   @IsString()
   location: 'active' | 'inactive';
 
+  @Column({ type: 'uuid' })
+  @IsNotEmpty()
+  @IsUUID()
+  @OneToOne(() => Staff)
+  referee: string;
+
   constructor(config?: {
     id?: string;
     home?: string;
@@ -46,8 +54,9 @@ export class Match {
     'away-score'?: number;
     played?: Date;
     location?: 'active' | 'inactive';
+    referee?: string;
   }) {
-    if (!config || Object.keys(config).length === 0) return;
+    if (!validObject(config) || Object.keys(config).length === 0) return;
 
     [
       'id',
@@ -57,6 +66,7 @@ export class Match {
       'away-score',
       'played',
       'location',
+      'referee',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
   }
 

@@ -77,4 +77,8 @@ export class PostPaymentDto {
   @IsNumber()
   @Min(0)
   amount: number;
+
+  constructor(amount?: any) {
+    this.amount = amount;
+  }
 }

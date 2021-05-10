@@ -28,6 +28,9 @@ export class MatchDto {
   @ApiProperty({ enum: ['active', 'inactive'] })
   location: 'active' | 'inactive';
 
+  @IsUUID()
+  staff: string;
+
   constructor(config?: {
     id?: string;
     home?: string;
@@ -36,6 +39,7 @@ export class MatchDto {
     'away-score'?: number;
     played?: string;
     location?: 'active' | 'inactive';
+    staff?: string;
   }) {
     if (!config || Object.keys(config).length === 0) return;
     if (!validObject(config) || Object.keys(config).length === 0) return;
@@ -48,6 +52,7 @@ export class MatchDto {
       'away-score',
       'played',
       'location',
+      'staff',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
   }
 }
@@ -71,6 +76,7 @@ export class CreateMatchDto extends OmitType(MatchDto, ['id']) {
       'away-score',
       'played',
       'location',
+      'staff',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
   }
 }
@@ -86,6 +92,7 @@ export class PatchMatchDto extends OmitType(PartialType(MatchDto), ['id']) {
       'away-score',
       'played',
       'location',
+      'staff',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
   }
 }
