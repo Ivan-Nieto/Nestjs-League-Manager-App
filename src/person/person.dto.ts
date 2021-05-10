@@ -6,9 +6,8 @@ import {
   IsOptional,
   IsEmail,
   MinLength,
-  IsPhoneNumber,
-  IsNotEmpty,
   IsUUID,
+  IsDateString,
 } from 'class-validator';
 import { PartialType, PickType, OmitType } from '@nestjs/swagger';
 import validObject from 'src/utils/validObject';
@@ -25,7 +24,7 @@ export class PersonDto {
   @MinLength(3)
   last_name: string;
 
-  @IsPhoneNumber()
+  @IsInt()
   @IsOptional()
   @ApiProperty({ type: 'number', example: 1230003131, minLength: 10 })
   phone?: number;
@@ -34,7 +33,7 @@ export class PersonDto {
   @IsOptional()
   email?: string;
 
-  @IsNotEmpty()
+  @IsDateString()
   @IsOptional()
   dob?: Date;
 

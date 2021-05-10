@@ -1,5 +1,5 @@
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
-import { IsDate, IsNumber, IsString, IsUUID, Min } from 'class-validator';
+import { IsDateString, IsNumber, IsString, IsUUID, Min } from 'class-validator';
 import { PartialType } from '@nestjs/swagger';
 import validObject from 'src/utils/validObject';
 
@@ -21,7 +21,7 @@ export class MatchDto {
   @Min(0)
   'away-score': number;
 
-  @IsDate()
+  @IsDateString()
   played: Date;
 
   @IsString()
