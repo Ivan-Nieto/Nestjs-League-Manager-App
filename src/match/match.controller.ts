@@ -12,8 +12,10 @@ import { CreateMatchValidationPipe } from './validationPipes/CreateMatchValidati
 import { MatchService } from './match.service';
 import { PatchMatchDto, CreateMatchDto } from './match.dto';
 import { PatchMatchValidationPipe } from './validationPipes/PatchMatchValidationPipe';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('match')
+@ApiTags('Match')
 export class MatchController {
   constructor(private matchService: MatchService) {}
 

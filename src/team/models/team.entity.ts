@@ -1,39 +1,41 @@
-import { IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import validObject from '../../utils/validObject';
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Member } from '../../member/models/member.entity';
+import { status } from '../../utils/enums';
 
 @Entity()
 export class Team {
   @PrimaryGeneratedColumn('uuid')
-  @IsUUID()
   id: string;
 
   @Column()
-  @IsString()
   name: string;
 
   @Column({ type: 'uuid' })
-  @IsUUID()
   @OneToOne(() => Member)
+  @JoinColumn({ name: 'coach' })
   coach: string;
 
-  @Column({ type: 'uuid' })
-  @IsOptional()
-  @IsUUID()
+  @Column({ type: 'uuid', nullable: true })
   @OneToOne(() => Member)
+  @JoinColumn({ name: 'captain' })
   captain: string | null;
 
   @Column()
-  @IsString()
-  status: 'active' | 'inactive';
+  status: status;
 
   constructor(config?: {
     id?: string;
     name?: string;
     coach?: string;
     captain?: string | null;
-    status?: 'active' | 'inactive';
+    status?: status;
   }) {
     if (!validObject(config) || Object.keys(config).length === 0) return;
 

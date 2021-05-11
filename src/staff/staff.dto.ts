@@ -5,6 +5,9 @@ import {
   UpdatePersonDto,
 } from '../person/person.dto';
 import validObject from 'src/utils/validObject';
+import { PickType } from '@nestjs/swagger';
+import { OneToMany } from 'typeorm';
+import { Match } from '../match/models/match.entity';
 
 export class CreateStaffDto extends CreatePersonDto {
   @IsNumber()
@@ -15,6 +18,9 @@ export class CreateStaffDto extends CreatePersonDto {
   @IsDateString()
   @IsOptional()
   hire_date?: Date;
+
+  @OneToMany(() => Match, (match) => match.referee)
+  matches: Match[];
 
   constructor(config?: Record<string, any>) {
     super(config);
@@ -44,7 +50,7 @@ export class UpdateStaffDto extends UpdatePersonDto {
   }
 }
 
-export class StaffIdDto extends PersonDto {
+export class StaffIdDto extends PickType(PersonDto, ['id']) {
   constructor(config?: { id?: string }) {
     super();
     if (!validObject(config) || Object.keys(config).length === 0) return;

@@ -1,10 +1,3 @@
-import {
-  IsEmail,
-  IsOptional,
-  IsPhoneNumber,
-  IsString,
-  IsUUID,
-} from 'class-validator';
 import validObject from '../../utils/validObject';
 import {
   TableInheritance,
@@ -12,43 +5,34 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { status } from '../../utils/enums';
 
 @Entity()
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
 export class Person {
   @PrimaryGeneratedColumn('uuid')
-  @IsUUID()
   id: string;
 
   @Column()
-  @IsString()
   name: string;
 
   @Column()
-  @IsString()
   last_name: string;
 
-  @Column({ type: 'bigint' })
-  @IsPhoneNumber()
-  @IsOptional()
+  @Column({ type: 'bigint', nullable: true })
   phone?: number | null;
 
-  @Column()
-  @IsEmail()
-  @IsOptional()
+  @Column({ nullable: true })
   email?: string | null;
 
   @Column()
-  @IsOptional()
   dob: Date;
 
   @Column()
-  @IsString()
   role: string;
 
-  @Column()
-  @IsString()
-  status: string;
+  @Column({ enum: status, type: 'enum' })
+  status: status;
 
   constructor(config?: {
     name?: string;
@@ -57,7 +41,7 @@ export class Person {
     email?: string;
     dob?: Date;
     role?: string;
-    status?: string;
+    status?: status;
   }) {
     if (!validObject(config) || Object.keys(config).length === 0) return;
 

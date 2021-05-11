@@ -1,23 +1,27 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { Person } from '../../person/models/person.entity';
-import { ChildEntity, Column, JoinTable, OneToOne } from 'typeorm';
+import {
+  ChildEntity,
+  Column,
+  JoinColumn,
+  JoinTable,
+  ManyToOne,
+  OneToOne,
+} from 'typeorm';
 import { Team } from '../../team/models/team.entity';
 import validObject from '../../utils/validObject';
 
 @ChildEntity()
 export class Member extends Person {
   @Column()
-  @IsNumber()
   balance: number;
 
   @Column({ type: 'uuid' })
-  @IsString()
   @JoinTable()
-  @OneToOne(() => Team)
+  @ManyToOne(() => Team)
+  @JoinColumn({ name: 'team_id' })
   team_id: string | null;
 
   @Column({ type: 'jsonb' })
-  @IsNotEmpty()
   stats: {
     shots_on_goal?: number;
     [key: string]: any;

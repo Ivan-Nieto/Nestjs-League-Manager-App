@@ -16,9 +16,10 @@ import { StatusValidationPipe } from './validationPipes/StatusValidationPipe';
 import { RoleValidationPipe } from './validationPipes/RoleValidationPipe';
 import { PatchTeamValidationPipe } from './validationPipes/PatchTeamValidationPipe';
 import { PatchTeamStatusValidationPipe } from './validationPipes/PatchTeamStatusValidationPipe';
-import { ApiQuery } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @Controller('team')
+@ApiTags('Team')
 export class TeamController {
   constructor(private teamService: TeamService) {}
 

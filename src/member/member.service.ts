@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 
 import { Member } from './models/member.entity';
 import { PatchMemberDto, PostMemberDto } from './member.dto';
+import { Team } from '../team/models/team.entity';
+import { status } from '../utils/enums';
 
 @Injectable()
 export class MemberService {
@@ -57,6 +59,18 @@ export class MemberService {
    */
   public async createMember(config: PostMemberDto): Promise<string> {
     const member = new Member(config);
+
+    // Make sure team exists if provided
+    if (config.team_id)
+      await this.connection.manager
+        .findOne(Team, config.team_id)
+        .then((t) => {
+          if (!t) throw new HttpException('Team not found', 404);
+        })
+        .catch((error) => {
+          console.error(error);
+          throw new HttpException('Failed to validate team', 500);
+        });
 
     return this.connection
       .save(member)
@@ -178,7 +192,7 @@ export class MemberService {
    */
   public async patchUserStatus(
     memberId: string,
-    status: string,
+    status: status,
   ): Promise<string> {
     return this.updateMember(memberId, { status });
   }

@@ -1,7 +1,8 @@
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
-import { IsDate, IsNumber, IsString, IsUUID, Min } from 'class-validator';
+import { IsDateString, IsNumber, IsString, IsUUID, Min } from 'class-validator';
 import { PartialType } from '@nestjs/swagger';
-import validObject from 'src/utils/validObject';
+import validObject from '../utils/validObject';
+import { location } from '../utils/enums';
 
 export class MatchDto {
   @IsUUID()
@@ -21,12 +22,12 @@ export class MatchDto {
   @Min(0)
   'away-score': number;
 
-  @IsDate()
+  @IsDateString()
   played: Date;
 
   @IsString()
-  @ApiProperty({ enum: ['active', 'inactive'] })
-  location: 'active' | 'inactive';
+  @ApiProperty({ enum: location })
+  location: location;
 
   @IsUUID()
   staff: string;
@@ -38,7 +39,7 @@ export class MatchDto {
     'home-score'?: number;
     'away-score'?: number;
     played?: string;
-    location?: 'active' | 'inactive';
+    location?: location;
     staff?: string;
   }) {
     if (!config || Object.keys(config).length === 0) return;

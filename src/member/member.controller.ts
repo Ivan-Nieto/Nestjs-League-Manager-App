@@ -15,8 +15,10 @@ import { MemberService } from './member.service';
 import { UpdatePersonStatusDto } from '../person/person.dto';
 import { PostMemberDto, PatchMemberDto, PostPaymentDto } from './member.dto';
 import { PatchMemberStatusValidationPipe } from './validationPipes/PatchMemberStatusValidationPipe';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('member')
+@ApiTags('Member')
 export class MemberController {
   constructor(private memberService: MemberService) {}
 

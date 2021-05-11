@@ -1,4 +1,3 @@
-import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 import validObject from '../../utils/validObject';
 import { ChildEntity, Column } from 'typeorm';
 import { Person } from '../../person/models/person.entity';
@@ -6,14 +5,9 @@ import { Person } from '../../person/models/person.entity';
 @ChildEntity()
 export class Staff extends Person {
   @Column()
-  @IsNumber()
-  @IsOptional()
-  @Min(0)
   wage?: number | null;
 
   @Column()
-  @IsDate()
-  @IsOptional()
   hire_date?: Date | null;
 
   constructor(config: Record<string, any>) {

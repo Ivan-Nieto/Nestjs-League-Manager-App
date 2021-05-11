@@ -1,27 +1,21 @@
-import { IsDate, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import validObject from '../../utils/validObject';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Audit {
   @PrimaryGeneratedColumn('uuid')
-  @IsUUID()
   id: string;
 
   @Column()
-  @IsString()
   entity: 'match' | 'member' | 'person' | 'team' | 'staff';
 
   @Column()
-  @IsString()
   action: 'add' | 'delete' | 'update';
 
   @Column()
-  @IsDate()
   modified_at: Date;
 
   @Column({ type: 'jsonb' })
-  @IsNotEmpty()
   new_value: Record<string, any>;
 
   constructor(config?: {

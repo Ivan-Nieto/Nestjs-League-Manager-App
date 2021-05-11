@@ -1,12 +1,12 @@
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { ValidateDtoPipe } from 'src/utils/ValidateDtoPipe';
 import { CreateStaffDto, UpdateStaffDto } from './staff.dto';
 import { StaffService } from './staff.service';
-import { UpdateStaffValidationPipe } from './validationPipes/UpdateStaffValidationPipe';
-import { ValidateCreateStaffPipe } from './validationPipes/ValidateCreateStaffPipe';
 import { ValidateStaffIdPipe } from './validationPipes/ValidateStaffIdPipe';
 
 @Controller('staff')
+@ApiTags('Staff')
 export class StaffController {
   constructor(private staffService: StaffService) {}
 

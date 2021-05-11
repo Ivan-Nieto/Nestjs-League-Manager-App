@@ -8,9 +8,11 @@ import {
   IsUUID,
   IsInt,
   IsDateString,
+  IsEnum,
 } from 'class-validator';
 import { PartialType, PickType, OmitType } from '@nestjs/swagger';
-import validObject from 'src/utils/validObject';
+import validObject from '../utils/validObject';
+import { status } from '../utils/enums';
 
 export class PersonDto {
   @IsUUID()
@@ -44,7 +46,8 @@ export class PersonDto {
 
   @IsOptional()
   @IsString()
-  status?: string;
+  @IsEnum(status)
+  status?: status;
 
   constructor(config?: {
     id?: string;
@@ -54,7 +57,7 @@ export class PersonDto {
     email?: string;
     dob?: string;
     role?: string;
-    status?: string;
+    status?: status;
   }) {
     if (!config || Object.keys(config).length === 0) return;
     if (!validObject(config) || Object.keys(config).length === 0) return;
@@ -116,7 +119,7 @@ export class UpdatePersonDto extends PartialType(CreatePersonDto) {
 export class UpdatePersonStatusDto extends PickType(CreatePersonDto, [
   'status',
 ]) {
-  constructor(config?: { status: string }) {
+  constructor(config?: { status: status }) {
     super();
     this.status = config?.status;
   }

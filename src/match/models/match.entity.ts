@@ -1,49 +1,45 @@
-import { IsDate, IsNotEmpty, IsString, IsUUID, Min } from 'class-validator';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Staff } from '../../staff/models/staff.entity';
-import validObject from '../../utils/validObject';
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Team } from '../../team/models/team.entity';
+import { location } from '../../utils/enums';
+import validObject from '../../utils/validObject';
 
 @Entity()
 export class Match {
   @PrimaryGeneratedColumn('uuid')
-  @IsUUID()
   id: string;
 
   @Column({ type: 'uuid' })
-  @IsNotEmpty()
-  @IsUUID()
-  @OneToOne(() => Team)
+  @ManyToOne(() => Team)
+  @JoinColumn({ name: 'home' })
   home: string;
 
   @Column({ type: 'uuid' })
-  @IsNotEmpty()
-  @IsUUID()
-  @OneToOne(() => Team)
+  @ManyToOne(() => Team)
+  @JoinColumn({ name: 'team' })
   team: string;
 
   @Column()
-  @IsNotEmpty()
-  @Min(0)
   'home-score': number;
 
   @Column()
-  @IsNotEmpty()
-  @Min(0)
   'away-score': number;
 
   @Column()
-  @IsDate()
   played: Date;
 
-  @Column()
-  @IsString()
-  location: 'active' | 'inactive';
+  @Column({ enum: location, type: 'enum' })
+  location: location;
 
   @Column({ type: 'uuid' })
-  @IsNotEmpty()
-  @IsUUID()
-  @OneToOne(() => Staff)
+  @ManyToOne(() => Staff)
+  @JoinColumn({ name: 'referee' })
   referee: string;
 
   constructor(config?: {
@@ -53,7 +49,7 @@ export class Match {
     'home-score'?: number;
     'away-score'?: number;
     played?: Date;
-    location?: 'active' | 'inactive';
+    location?: location;
     referee?: string;
   }) {
     if (!validObject(config) || Object.keys(config).length === 0) return;
