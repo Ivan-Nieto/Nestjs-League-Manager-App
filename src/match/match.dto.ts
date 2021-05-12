@@ -9,9 +9,11 @@ export class MatchDto {
   id: string;
 
   @IsUUID()
+  @ApiProperty({ example: '00000000-0000-4000-A000-000000000000' })
   home: string;
 
   @IsUUID()
+  @ApiProperty({ example: '00000000-0000-4000-A000-000000000000' })
   team: string;
 
   @IsNumber()
@@ -30,7 +32,8 @@ export class MatchDto {
   location: location;
 
   @IsUUID()
-  staff: string;
+  @ApiProperty({ example: '00000000-0000-4000-A000-000000000000' })
+  referee: string;
 
   constructor(config?: {
     id?: string;
@@ -41,6 +44,7 @@ export class MatchDto {
     played?: string;
     location?: location;
     staff?: string;
+    referee?: string;
   }) {
     if (!config || Object.keys(config).length === 0) return;
     if (!validObject(config) || Object.keys(config).length === 0) return;
@@ -53,10 +57,12 @@ export class MatchDto {
       'away-score',
       'played',
       'location',
-      'staff',
+      'referee',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
   }
 }
+
+export class InitializeMatchDto extends PartialType(MatchDto) {}
 
 export class MatchIdDto extends PickType(MatchDto, ['id']) {
   constructor(config: { id?: string }) {
@@ -77,7 +83,7 @@ export class CreateMatchDto extends OmitType(MatchDto, ['id']) {
       'away-score',
       'played',
       'location',
-      'staff',
+      'referee',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
   }
 }
@@ -93,7 +99,7 @@ export class PatchMatchDto extends OmitType(PartialType(MatchDto), ['id']) {
       'away-score',
       'played',
       'location',
-      'staff',
+      'referee',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
   }
 }

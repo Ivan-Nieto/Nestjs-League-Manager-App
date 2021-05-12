@@ -1,27 +1,33 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 import { PartialType, PickType } from '@nestjs/swagger';
-import { status } from '../utils/enums';
+import { teamStatus } from '../utils/enums';
 
 export class TeamDto {
   @IsUUID()
   id: string;
 
   @IsString()
+  @ApiProperty({ example: 'Team A' })
   name: string;
 
   @IsUUID()
+  @ApiProperty({ example: '00000000-0000-4000-A000-000000000000' })
   coach: string;
 
   @IsUUID()
   @IsOptional()
+  @ApiProperty({ example: '00000000-0000-4000-A000-000000000000' })
   captain?: string | null;
 
   @IsString()
-  @ApiProperty({ enum: status })
-  @IsEnum(status)
-  status: status;
+  @ApiProperty({ enum: teamStatus })
+  @IsEnum(teamStatus)
+  @ApiProperty({ example: 'active' })
+  status: teamStatus;
 }
+
+export class InitializeTeamDto extends PartialType(TeamDto) {}
 
 export class CreateTeamDto extends OmitType(TeamDto, ['id']) {
   constructor(config?: Record<string, any>) {
@@ -42,7 +48,7 @@ export class PatchTeamDto extends PartialType(CreateTeamDto) {
 }
 
 export class PatchStatusDto extends PickType(CreateTeamDto, ['status']) {
-  constructor(config: { status: status }) {
+  constructor(config: { status: teamStatus }) {
     super(config);
     this.status = config.status;
   }

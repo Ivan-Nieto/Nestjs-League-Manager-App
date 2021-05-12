@@ -28,3 +28,23 @@ export enum status {
   suspended = 'suspended',
   unknown = 'unknown',
 }
+
+export enum teamStatus {
+  active = 'active',
+  inactive = 'inactive',
+  unknown = 'unknown',
+}
+
+export enum entities {
+  match = 'match',
+  member = 'member',
+  person = 'person',
+  team = 'team',
+  staff = 'staff',
+}
+
+export enum actions {
+  add = 'add',
+  update = 'update',
+  delete = 'delete',
+}

@@ -1,16 +1,18 @@
 import validObject from '../../utils/validObject';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { entities, actions } from '../../utils/enums';
+import { InitializeAuditDto } from '../audit.dto';
 
 @Entity()
 export class Audit {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  entity: 'match' | 'member' | 'person' | 'team' | 'staff';
+  @Column({ type: 'enum', enum: entities })
+  entity: entities;
 
-  @Column()
-  action: 'add' | 'delete' | 'update';
+  @Column({ type: 'enum', enum: actions })
+  action: actions;
 
   @Column()
   modified_at: Date;
@@ -18,12 +20,7 @@ export class Audit {
   @Column({ type: 'jsonb' })
   new_value: Record<string, any>;
 
-  constructor(config?: {
-    entity?: any;
-    action?: any;
-    modified_at?: any;
-    new_value?: any;
-  }) {
+  constructor(config?: InitializeAuditDto) {
     if (!validObject(config) || Object.keys(config).length === 0) return;
     ['entity', 'action', 'modified_at', 'new_value'].forEach((e) =>
       config[e] == null ? null : (this[e] = config[e]),

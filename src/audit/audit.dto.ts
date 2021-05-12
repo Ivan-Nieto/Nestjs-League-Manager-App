@@ -1,20 +1,21 @@
-import { PickType } from '@nestjs/swagger';
+import { PartialType, PickType } from '@nestjs/swagger';
 import {
   IsDateString,
   IsNotEmptyObject,
   IsString,
   IsUUID,
 } from 'class-validator';
+import { entities, actions } from '../utils/enums';
 
 export class AuditDto {
   @IsUUID()
   id: string;
 
   @IsString()
-  entity: 'team' | 'match' | 'staff' | 'person';
+  entity: entities;
 
   @IsString()
-  action: 'add' | 'update' | 'delete';
+  action: actions;
 
   @IsNotEmptyObject()
   new_value: Record<string, any>;
@@ -23,6 +24,7 @@ export class AuditDto {
   modified_at: string;
 }
 
+export class InitializeAuditDto extends PartialType(AuditDto) {}
 export class AuditIdDto extends PickType(AuditDto, ['id']) {
   constructor(id: string) {
     super();

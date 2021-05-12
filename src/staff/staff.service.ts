@@ -84,8 +84,11 @@ export class StaffService {
     staffId: string,
     data: UpdateStaffDto,
   ): Promise<string> {
+    const staff = await this.exists(staffId);
+    staff.update(data);
+
     return this.connection
-      .update(staffId, data)
+      .save(staff)
       .then(() => 'Done')
       .catch((error) => {
         console.error(error);

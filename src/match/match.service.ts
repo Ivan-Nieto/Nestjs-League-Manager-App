@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Match } from './models/match.entity';
 import { Team } from '../team/models/team.entity';
 import { CreateMatchDto, PatchMatchDto } from './match.dto';
+import { Staff } from 'src/staff/models/staff.entity';
 
 @Injectable()
 export class MatchService {
@@ -20,6 +21,24 @@ export class MatchService {
    */
   private notFound(message?: string): never {
     throw new HttpException(message || 'Not Found', 404);
+  }
+
+  /**
+   * @description Checks if a team exists
+   * @throws
+   *
+   * @param teamId Team uuid
+   * @returns {Team}
+   */
+  private async teamExists(teamId: string): Promise<Team> {
+    const team = await this.connection.manager
+      .findOne(Team, teamId)
+      .catch((error) => {
+        console.error(error);
+        this.notFound('Team not found');
+      });
+    if (!team) this.notFound('Team not found');
+    return team;
   }
 
   /**
@@ -106,31 +125,27 @@ export class MatchService {
     data: PatchMatchDto,
   ): Promise<string> {
     // Make sure match exists
-    await this.exists(matchId);
+    const match = await this.exists(matchId);
 
     // If updating a team make sure it exists
-    if (data.home) {
-      const home = await this.connection.manager
-        .findOne(Team, data.home)
+    if (data.home) await this.teamExists(data.home);
+
+    if (data.team) await this.teamExists(data.team);
+
+    // If referee is being updated make sure they exist
+    if (data.referee) {
+      const referee = await this.connection.manager
+        .findOne(Staff, data.referee)
         .catch((error) => {
           console.error(error);
-          throw new HttpException('Failed to validate home team', 500);
+          throw new HttpException('Failed to validate referee', 500);
         });
-      if (!home) throw new HttpException('Home team not found', 404);
+      if (!referee) this.notFound('Referee not found');
     }
 
-    if (data.team) {
-      const team = await this.connection.manager
-        .findOne(Team, data.team)
-        .catch((error) => {
-          console.error(error);
-          throw new HttpException('Failed to validate team team', 500);
-        });
-      if (!team) throw new HttpException('Team not found', 404);
-    }
-
+    match.update(data);
     return this.connection
-      .update(matchId, data)
+      .save(match)
       .then(() => 'Done')
       .catch((error) => {
         console.error(error);

@@ -61,16 +61,15 @@ export class MemberService {
     const member = new Member(config);
 
     // Make sure team exists if provided
-    if (config.team_id)
-      await this.connection.manager
+    if (config.team_id) {
+      const team = await this.connection.manager
         .findOne(Team, config.team_id)
-        .then((t) => {
-          if (!t) throw new HttpException('Team not found', 404);
-        })
         .catch((error) => {
           console.error(error);
           throw new HttpException('Failed to validate team', 500);
         });
+      if (!team) throw new HttpException('Team not found', 404);
+    }
 
     return this.connection
       .save(member)
@@ -125,10 +124,11 @@ export class MemberService {
     const member = await this.exists(memberId);
 
     // Get updated balance
-    const newBalance = (member.balance || 0) + amount;
+    const balance = (member.balance || 0) + amount;
+    member.update({ balance });
 
     return this.connection
-      .update(memberId, { balance: newBalance })
+      .save(member)
       .then(() => 'Done')
       .catch((error) => {
         console.error(error);
@@ -148,10 +148,11 @@ export class MemberService {
     data: PatchMemberDto,
   ): Promise<string> {
     // Make sure member exists
-    await this.exists(memberId);
+    const member = await this.exists(memberId);
+    member.update(data);
 
     return this.connection
-      .update(memberId, data)
+      .save(member)
       .then(() => 'Done')
       .catch((error) => {
         console.error(error);

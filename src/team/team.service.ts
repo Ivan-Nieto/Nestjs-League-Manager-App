@@ -24,6 +24,28 @@ export class TeamService {
   }
 
   /**
+   * @description Updates a member entity
+   * @throws
+   *
+   * @param {Member} mem Member entity
+   * @param {Object} data Update data
+   * @returns {string} Done
+   */
+  private async updateMember(
+    mem: Member,
+    data: Record<string, any>,
+  ): Promise<string> {
+    mem.update(data);
+    return this.connection.manager
+      .save(mem)
+      .then(() => 'Done')
+      .catch((error) => {
+        console.error(error);
+        throw new HttpException('Failed to run update', 500);
+      });
+  }
+
+  /**
    * @description Finds a Team by uuid and throws a 404 error if not found
    * @throws
    *
@@ -68,16 +90,8 @@ export class TeamService {
       );
     };
 
-    const updateMember = async (id: string) =>
-      this.connection.manager
-        .update(Member, id, { team_id: team.id })
-        .catch((error) => {
-          console.error(error);
-          throw new HttpException('Failed to run update', 500);
-        });
-
     // Make sure coach and captain exists and can be assigned to team
-    let captain;
+    let captain: Member;
     if (data.captain) {
       captain = await this.connection.manager
         .findOne(Member, data.captain)
@@ -89,7 +103,7 @@ export class TeamService {
       partOfTeam(captain?.team_id, 'captain');
     }
 
-    let coach;
+    let coach: Member;
     if (data.coach && data.captain !== data.coach) {
       coach = await this.connection.manager
         .findOne(Member, data.coach)
@@ -108,9 +122,10 @@ export class TeamService {
 
     // Assign coach/captain to this team
     try {
-      if (captain && captain.team_id == null) await updateMember(captain.id);
+      if (captain && captain.team_id == null)
+        await this.updateMember(captain, { team_id: team.id });
       if (coach && coach.team_id == null && data.captain !== data.coach)
-        await updateMember(coach.id);
+        await this.updateMember(coach, { team_id: team.id });
     } catch (error) {
       console.error(error);
       await this.connection.delete(team.id).catch(console.error);
@@ -246,7 +261,8 @@ export class TeamService {
    */
   public async updateTeam(teamId: string, data: PatchTeamDto): Promise<string> {
     // Make sure team exists
-    await this.exists(teamId);
+    const team = await this.exists(teamId);
+    team.update(data);
 
     const internal = (error?: any): never => {
       console.error(error);
@@ -262,35 +278,29 @@ export class TeamService {
 
     // If updating coach or captain make sure those members exists
     // Also make sure coach and captain belong to this team
+    let captain: Member;
     if (data.captain) {
-      const captain = await this.connection.manager
+      captain = await this.connection.manager
         .findOne(Member, data.captain)
         .catch(internal);
       checkUser('captain', captain);
     }
 
+    let coach: Member;
     if (data.coach) {
-      const coach = await this.connection.manager
+      coach = await this.connection.manager
         .findOne(Member, data.coach)
         .catch(internal);
       checkUser('coach', coach);
     }
 
-    await this.connection.update(teamId, data).catch(internal);
-
-    const updateMember = async (id: string) =>
-      this.connection.manager
-        .update(Member, id, { team_id: teamId })
-        .catch((error) => {
-          console.error(error);
-          throw new HttpException('Failed to update team member', 500);
-        });
+    await this.connection.save(team).catch(internal);
 
     // Update captain if necessary
-    if (data.captain) await updateMember(data.captain);
+    if (captain) await this.updateMember(captain, { team_id: team.id });
 
     // Update coach if necessary
-    if (data.coach) await updateMember(data.coach);
+    if (coach) await this.updateMember(coach, { team_id: team.id });
 
     return 'Done';
   }

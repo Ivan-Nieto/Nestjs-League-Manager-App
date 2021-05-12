@@ -9,6 +9,7 @@ import { Staff } from '../../staff/models/staff.entity';
 import { Team } from '../../team/models/team.entity';
 import { location } from '../../utils/enums';
 import validObject from '../../utils/validObject';
+import { InitializeMatchDto, PatchMatchDto } from '../match.dto';
 
 @Entity()
 export class Match {
@@ -34,7 +35,7 @@ export class Match {
   @Column()
   played: Date;
 
-  @Column({ enum: location, type: 'enum' })
+  @Column({ enum: location, type: 'enum', default: 'unknown' })
   location: location;
 
   @Column({ type: 'uuid' })
@@ -42,16 +43,17 @@ export class Match {
   @JoinColumn({ name: 'referee' })
   referee: string;
 
-  constructor(config?: {
-    id?: string;
-    home?: string;
-    team?: string;
-    'home-score'?: number;
-    'away-score'?: number;
-    played?: Date;
-    location?: location;
-    referee?: string;
-  }) {
+  constructor(config?: InitializeMatchDto) {
+    this.seedMatch(config);
+  }
+
+  /**
+   * @description Sets object data
+   *
+   * @param {InitializeMatchDto} config Data to be seeded
+   * @returns {string}
+   */
+  private seedMatch(config?: InitializeMatchDto): string {
     if (!validObject(config) || Object.keys(config).length === 0) return;
 
     [
@@ -64,10 +66,30 @@ export class Match {
       'location',
       'referee',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
+    return 'Done';
+  }
+
+  /**
+   * @description Updates object data
+   *
+   * @param {PatchMatchDto} config Update data
+   * @returns {string}
+   */
+  public update(config?: PatchMatchDto): string {
+    if (!validObject(config) || Object.keys(config).length === 0) return;
+
+    // Make sure constant fields are not updated
+    const temp: Record<string, any> = config || {};
+    ['id'].map((k) => temp[k] && delete temp[k]);
+
+    this.seedMatch(temp);
+    return 'Done';
   }
 
   /**
    * @description Object representation of entity
+   *
+   * @returns {Object} All keys currently defined in this object
    */
   public toObject(): Record<keyof this, any> {
     return Object.keys(this).reduce(
