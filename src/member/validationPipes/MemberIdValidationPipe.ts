@@ -3,7 +3,7 @@ import {
   Injectable,
   ValidationPipe,
 } from '@nestjs/common';
-import validateEntity from 'src/utils/validateEntity';
+import validateEntity from '../../utils/validateEntity';
 import { MemberIdDto } from '../member.dto';
 
 /**

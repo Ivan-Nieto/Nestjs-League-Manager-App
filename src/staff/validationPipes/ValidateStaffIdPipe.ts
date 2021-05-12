@@ -1,5 +1,5 @@
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
-import validateEntity from 'src/utils/validateEntity';
+import validateEntity from '../../utils/validateEntity';
 import { StaffIdDto } from '../staff.dto';
 
 export class ValidateStaffIdPipe extends ValidationPipe {

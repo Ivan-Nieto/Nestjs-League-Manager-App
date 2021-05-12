@@ -1,6 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { ValidateDtoPipe } from 'src/utils/ValidateDtoPipe';
+import { ValidateDtoPipe } from '../utils/ValidateDtoPipe';
 import { CreateStaffDto, UpdateStaffDto } from './staff.dto';
 import { StaffService } from './staff.service';
 import { ValidateStaffIdPipe } from './validationPipes/ValidateStaffIdPipe';
@@ -35,5 +43,12 @@ export class StaffController {
     @Body(new ValidateDtoPipe(UpdateStaffDto)) config: UpdateStaffDto,
   ) {
     return this.staffService.updateStaff(staffId, config);
+  }
+
+  @Delete(':staffId')
+  public async deleteStaff(
+    @Param('staffId', ValidateStaffIdPipe) staffId: string,
+  ) {
+    return this.staffService.delete(staffId);
   }
 }

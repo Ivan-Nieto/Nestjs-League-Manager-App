@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Match } from './models/match.entity';
 import { Team } from '../team/models/team.entity';
 import { CreateMatchDto, PatchMatchDto } from './match.dto';
-import { Staff } from 'src/staff/models/staff.entity';
+import { Staff } from '../staff/models/staff.entity';
 
 @Injectable()
 export class MatchService {

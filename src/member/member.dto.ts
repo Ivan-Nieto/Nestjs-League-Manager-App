@@ -5,7 +5,7 @@ import {
   IsNumber,
   IsNotEmpty,
 } from 'class-validator';
-import validObject from 'src/utils/validObject';
+import validObject from '../utils/validObject';
 import { ApiProperty, PickType } from '@nestjs/swagger';
 
 import {

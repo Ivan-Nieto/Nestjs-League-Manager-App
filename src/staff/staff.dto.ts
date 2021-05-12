@@ -4,7 +4,7 @@ import {
   UpdatePersonDto,
   CreatePersonDto,
 } from '../person/person.dto';
-import validObject from 'src/utils/validObject';
+import validObject from '../utils/validObject';
 import { PartialType, PickType } from '@nestjs/swagger';
 
 export class StaffDto extends PersonDto {

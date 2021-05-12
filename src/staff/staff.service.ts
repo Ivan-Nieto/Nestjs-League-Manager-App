@@ -95,4 +95,24 @@ export class StaffService {
         throw new HttpException('Failed to update staff', 500);
       });
   }
+
+  /**
+   * @description Deletes a staff member
+   * @throws
+   *
+   * @param staffId Staff member uuid
+   * @returns {string}
+   */
+  public async delete(staffId: string): Promise<string> {
+    // Make sure staff member exists
+    await this.exists(staffId);
+
+    return this.connection
+      .delete(staffId)
+      .then(() => 'Done')
+      .catch((error) => {
+        console.error(error);
+        throw new HttpException('Failed to delete staff', 500);
+      });
+  }
 }
