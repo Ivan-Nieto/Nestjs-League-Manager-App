@@ -9,10 +9,12 @@ import {
   IsInt,
   IsDateString,
   IsEnum,
+  ValidateIf,
 } from 'class-validator';
 import { PartialType, PickType, OmitType } from '@nestjs/swagger';
 import validObject from '../utils/validObject';
 import { status } from '../utils/enums';
+import PhoneNumber from '../utils/PhoneNumberValidator';
 
 export class PersonDto {
   @IsUUID()
@@ -28,23 +30,26 @@ export class PersonDto {
   @ApiProperty({ example: 'Mc Murray' })
   last_name: string;
 
-  @IsOptional()
+  @ValidateIf(
+    (o) => (!Boolean(o.email) && !Boolean(o.phone)) || Boolean(o.phone),
+  )
   @IsInt()
+  @PhoneNumber()
   @ApiProperty({ type: 'number', example: 5759939983, minLength: 10 })
   phone?: number;
 
+  @ValidateIf(
+    (o) => (!Boolean(o.email) && !Boolean(o.phone)) || Boolean(o.email),
+  )
   @IsEmail()
-  @IsOptional()
   @ApiProperty({ example: 'd.mcmurray@test.com' })
   email?: string;
 
   @IsNotEmpty()
   @IsDateString()
-  @IsOptional()
   @ApiProperty({ example: '2000-11-24' })
   dob: Date;
 
-  @IsOptional()
   @IsString()
   @ApiProperty({ example: 'player' })
   role: string;
@@ -52,7 +57,7 @@ export class PersonDto {
   @IsOptional()
   @IsString()
   @IsEnum(status)
-  @ApiProperty({ example: 'injured' })
+  @ApiProperty({ example: 'injured', type: 'enum', enum: status })
   status?: status;
 
   constructor(config?: {

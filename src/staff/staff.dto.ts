@@ -10,19 +10,25 @@ import { PartialType, PickType } from '@nestjs/swagger';
 export class StaffDto extends PersonDto {
   @IsNumber()
   @Min(0)
-  @IsOptional()
-  wage?: number;
+  wage: number;
 
   @IsDateString()
   @IsOptional()
   hire_date?: Date;
+
+  constructor(config?: Record<string, any>) {
+    super(config);
+    if (!validObject(config) || Object.keys(config).length === 0) return;
+
+    this.wage = config?.wage;
+    this.hire_date = config?.hire_date;
+  }
 }
 
 export class CreateStaffDto extends CreatePersonDto {
   @IsNumber()
   @Min(0)
-  @IsOptional()
-  wage?: number;
+  wage: number;
 
   @IsDateString()
   @IsOptional()
@@ -39,8 +45,8 @@ export class CreateStaffDto extends CreatePersonDto {
 
 export class UpdateStaffDto extends UpdatePersonDto {
   @IsNumber()
-  @IsOptional()
   @Min(0)
+  @IsOptional()
   wage?: number;
 
   @IsDateString()

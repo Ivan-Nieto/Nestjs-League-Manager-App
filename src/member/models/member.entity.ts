@@ -4,6 +4,8 @@ import { Team } from '../../team/models/team.entity';
 import validObject from '../../utils/validObject';
 import { InitializeMemberDto, PatchMemberDto } from '../member.dto';
 
+export const NEW_MEMBER_INITIAL_FEE = 10;
+
 @ChildEntity()
 export class Member extends Person {
   @Column()

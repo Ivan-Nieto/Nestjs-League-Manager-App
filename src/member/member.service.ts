@@ -2,16 +2,17 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Member } from './models/member.entity';
+import { Member, NEW_MEMBER_INITIAL_FEE } from './models/member.entity';
 import { PatchMemberDto, PostMemberDto } from './member.dto';
-import { Team } from '../team/models/team.entity';
 import { status } from '../utils/enums';
+import { TeamService } from '../team/team.service';
 
 @Injectable()
 export class MemberService {
   constructor(
     @InjectRepository(Member)
     private connection: Repository<Member>,
+    private teamService: TeamService,
   ) {}
 
   /**
@@ -60,16 +61,23 @@ export class MemberService {
   public async createMember(config: PostMemberDto): Promise<string> {
     const member = new Member(config);
 
-    // Make sure team exists if provided
+    // Make sure balance is not less than zero
+    if (config.balance < 0)
+      throw new HttpException('Balance cannot be less than zero', 400);
+
+    // Make sure team exists if provided and slots are available
     if (config.team_id) {
-      const team = await this.connection.manager
-        .findOne(Team, config.team_id)
-        .catch((error) => {
-          console.error(error);
-          throw new HttpException('Failed to validate team', 500);
-        });
-      if (!team) throw new HttpException('Team not found', 404);
+      await this.teamService.exists(config.team_id);
+      const availableMemberSlots = await this.teamService.getNumMembersLeft(
+        config.team_id,
+      );
+      if (availableMemberSlots - 1 < 0)
+        throw new HttpException('Max number of team members exceeded', 400);
     }
+
+    // Add new member fee and set status to inactive
+    member.balance = member.balance + NEW_MEMBER_INITIAL_FEE;
+    member.status = status.inactive;
 
     return this.connection
       .save(member)
@@ -113,10 +121,10 @@ export class MemberService {
   }
 
   /**
-   * @description Increments a Members balance by a given amount
+   * @description Decrement a Members balance by a given amount
    *
    * @param {string} memberId Member uuid
-   * @param {number} amount Amount to increment balance by
+   * @param {number} amount Amount to decrement balance by
    * @returns {string} Done
    */
   public async makePayment(memberId: string, amount: number): Promise<string> {
@@ -124,8 +132,16 @@ export class MemberService {
     const member = await this.exists(memberId);
 
     // Get updated balance
-    const balance = (member.balance || 0) + amount;
+    const balance = (member.balance || 0) - amount;
+    if (balance < 0)
+      throw new HttpException(
+        'Balance cannot be less than zero after payment is applied',
+        400,
+      );
+
     member.update({ balance });
+    if (balance === 0 && member.status === status.inactive)
+      member.status = status.active;
 
     return this.connection
       .save(member)
@@ -149,8 +165,35 @@ export class MemberService {
   ): Promise<string> {
     // Make sure member exists
     const member = await this.exists(memberId);
-    member.update(data);
 
+    // Make sure balance is not less than zero
+    if (data.balance < 0)
+      throw new HttpException('Balance cannot be less than zero', 400);
+
+    // Make sure team exists if provided and slots are available
+    if (data.team_id && data.team_id !== member.team_id) {
+      await this.teamService.exists(data.team_id);
+      const availableMemberSlots = await this.teamService.getNumMembersLeft(
+        data.team_id,
+      );
+      if (availableMemberSlots - 1 < 0)
+        throw new HttpException('Max number of team members exceeded', 400);
+    }
+
+    // Set captain or coach to null for members old team if member is being reassigned
+    if (
+      member.team_id &&
+      ((!Boolean(data.team_id) && member.team_id) ||
+        (data.team_id && data.team_id !== member.team_id))
+    ) {
+      const team = await this.teamService.exists(member.team_id);
+      await this.teamService.updateTeam(member.team_id, {
+        ...(team.captain === memberId ? { captain: null } : {}),
+        ...(team.coach === memberId ? { coach: null } : {}),
+      });
+    }
+
+    member.update(data);
     return this.connection
       .save(member)
       .then(() => 'Done')
