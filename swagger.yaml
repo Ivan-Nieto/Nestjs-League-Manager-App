@@ -1,0 +1,1564 @@
+{
+  'openapi': '3.0.0',
+  'info':
+    {
+      'title': 'League Manager',
+      'description': 'League Manager API',
+      'version': '1.1',
+      'contact': {},
+    },
+  'tags': [],
+  'servers': [],
+  'components':
+    {
+      'schemas':
+        {
+          'Member':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'balance': { 'type': 'number' },
+                  'team_id': { 'type': 'string', 'nullable': true },
+                  'id': { 'type': 'string' },
+                  'name': { 'type': 'string' },
+                  'last_name': { 'type': 'string' },
+                  'phone': { 'type': 'number', 'nullable': true },
+                  'email': { 'type': 'string', 'nullable': true },
+                  'dob': { 'format': 'date-time', 'type': 'string' },
+                  'role': { 'type': 'string' },
+                  'status':
+                    {
+                      'enum':
+                        [
+                          'injured',
+                          'active',
+                          'inactive',
+                          'suspended',
+                          'unknown',
+                        ],
+                      'type': 'string',
+                    },
+                },
+              'required':
+                [
+                  'balance',
+                  'team_id',
+                  'id',
+                  'name',
+                  'last_name',
+                  'dob',
+                  'role',
+                  'status',
+                ],
+            },
+          'PostMemberDto':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'name':
+                    { 'type': 'string', 'minLength': 3, 'example': 'Douglass' },
+                  'last_name':
+                    {
+                      'type': 'string',
+                      'minLength': 3,
+                      'example': 'Mc Murray',
+                    },
+                  'phone':
+                    {
+                      'type': 'number',
+                      'example': 5759939983,
+                      'minLength': 10,
+                    },
+                  'email':
+                    { 'type': 'string', 'example': 'd.mcmurray@test.com' },
+                  'dob':
+                    {
+                      'format': 'date-time',
+                      'type': 'string',
+                      'example': '2000-11-24',
+                    },
+                  'role': { 'type': 'string', 'example': 'player' },
+                  'status':
+                    {
+                      'enum':
+                        [
+                          'injured',
+                          'active',
+                          'inactive',
+                          'suspended',
+                          'unknown',
+                        ],
+                      'type': 'string',
+                      'example': 'injured',
+                    },
+                  'team_id':
+                    {
+                      'type': 'string',
+                      'nullable': true,
+                      'example': '00000000-0000-4000-A000-000000000000',
+                    },
+                  'balance': { 'type': 'number', 'minimum': 0 },
+                },
+              'required': ['name', 'last_name', 'dob', 'role'],
+            },
+          'PostPaymentDto':
+            {
+              'type': 'object',
+              'properties': { 'amount': { 'type': 'number', 'minimum': 0 } },
+              'required': ['amount'],
+            },
+          'PatchMemberDto':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'name':
+                    { 'type': 'string', 'minLength': 3, 'example': 'Douglass' },
+                  'last_name':
+                    {
+                      'type': 'string',
+                      'minLength': 3,
+                      'example': 'Mc Murray',
+                    },
+                  'phone':
+                    {
+                      'type': 'number',
+                      'example': 5759939983,
+                      'minLength': 10,
+                    },
+                  'email':
+                    { 'type': 'string', 'example': 'd.mcmurray@test.com' },
+                  'dob':
+                    {
+                      'format': 'date-time',
+                      'type': 'string',
+                      'example': '2000-11-24',
+                    },
+                  'role': { 'type': 'string', 'example': 'player' },
+                  'status':
+                    {
+                      'enum':
+                        [
+                          'injured',
+                          'active',
+                          'inactive',
+                          'suspended',
+                          'unknown',
+                        ],
+                      'type': 'string',
+                      'example': 'injured',
+                    },
+                  'balance': { 'type': 'number', 'minimum': 0 },
+                  'team_id': { 'type': 'string', 'nullable': true },
+                },
+            },
+          'Person':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'id': { 'type': 'string' },
+                  'name': { 'type': 'string' },
+                  'last_name': { 'type': 'string' },
+                  'phone': { 'type': 'number', 'nullable': true },
+                  'email': { 'type': 'string', 'nullable': true },
+                  'dob': { 'format': 'date-time', 'type': 'string' },
+                  'role': { 'type': 'string' },
+                  'status':
+                    {
+                      'enum':
+                        [
+                          'injured',
+                          'active',
+                          'inactive',
+                          'suspended',
+                          'unknown',
+                        ],
+                      'type': 'string',
+                    },
+                },
+              'required': ['id', 'name', 'last_name', 'dob', 'role', 'status'],
+            },
+          'Team':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'id': { 'type': 'string' },
+                  'name': { 'type': 'string' },
+                  'coach': { 'type': 'string' },
+                  'captain': { 'type': 'string', 'nullable': true },
+                  'status':
+                    {
+                      'enum': ['active', 'inactive', 'unknown'],
+                      'type': 'string',
+                    },
+                },
+              'required': ['id', 'name', 'coach', 'captain', 'status'],
+            },
+          'CreateTeamDto':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'name': { 'type': 'string', 'example': 'Team A' },
+                  'coach':
+                    {
+                      'type': 'string',
+                      'example': '00000000-0000-4000-A000-000000000000',
+                    },
+                  'captain':
+                    {
+                      'type': 'string',
+                      'nullable': true,
+                      'example': '00000000-0000-4000-A000-000000000000',
+                    },
+                  'status':
+                    {
+                      'enum': ['active', 'inactive', 'unknown'],
+                      'type': 'string',
+                      'example': 'active',
+                    },
+                },
+              'required': ['name', 'coach', 'status'],
+            },
+          'Match':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'id': { 'type': 'string' },
+                  'home': { 'type': 'string' },
+                  'team': { 'type': 'string' },
+                  'home-score': { 'type': 'number' },
+                  'away-score': { 'type': 'number' },
+                  'played': { 'format': 'date-time', 'type': 'string' },
+                  'location':
+                    {
+                      'enum':
+                        [
+                          'Argentina',
+                          'Brazil',
+                          'Canada',
+                          'Chile',
+                          'England',
+                          'France',
+                          'Germany',
+                          'Italy',
+                          'Japan',
+                          'South_Korea',
+                          'Mexico',
+                          'Qatar',
+                          'Russia',
+                          'South_Africa',
+                          'Spain',
+                          'Sweden',
+                          'Switzerland',
+                          'United_States',
+                          'Uruguay',
+                          'unknown',
+                        ],
+                      'type': 'string',
+                    },
+                  'referee': { 'type': 'string' },
+                },
+              'required':
+                [
+                  'id',
+                  'home',
+                  'team',
+                  'home-score',
+                  'away-score',
+                  'played',
+                  'location',
+                  'referee',
+                ],
+            },
+          'PatchTeamDto':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'name': { 'type': 'string', 'example': 'Team A' },
+                  'coach':
+                    {
+                      'type': 'string',
+                      'example': '00000000-0000-4000-A000-000000000000',
+                    },
+                  'captain':
+                    {
+                      'type': 'string',
+                      'nullable': true,
+                      'example': '00000000-0000-4000-A000-000000000000',
+                    },
+                  'status':
+                    {
+                      'enum': ['active', 'inactive', 'unknown'],
+                      'type': 'string',
+                      'example': 'active',
+                    },
+                },
+            },
+          'PatchStatusDto':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'status':
+                    {
+                      'enum': ['active', 'inactive', 'unknown'],
+                      'type': 'string',
+                      'example': 'active',
+                    },
+                },
+              'required': ['status'],
+            },
+          'CreateMatchDto':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'home':
+                    {
+                      'type': 'string',
+                      'example': '00000000-0000-4000-A000-000000000000',
+                    },
+                  'team':
+                    {
+                      'type': 'string',
+                      'example': '00000000-0000-4000-A000-000000000000',
+                    },
+                  'location':
+                    {
+                      'enum':
+                        [
+                          'Argentina',
+                          'Brazil',
+                          'Canada',
+                          'Chile',
+                          'England',
+                          'France',
+                          'Germany',
+                          'Italy',
+                          'Japan',
+                          'South_Korea',
+                          'Mexico',
+                          'Qatar',
+                          'Russia',
+                          'South_Africa',
+                          'Spain',
+                          'Sweden',
+                          'Switzerland',
+                          'United_States',
+                          'Uruguay',
+                          'unknown',
+                        ],
+                      'type': 'string',
+                    },
+                  'referee':
+                    {
+                      'type': 'string',
+                      'example': '00000000-0000-4000-A000-000000000000',
+                    },
+                  'home-score': { 'type': 'number', 'minimum': 0 },
+                  'away-score': { 'type': 'number', 'minimum': 0 },
+                  'played': { 'format': 'date-time', 'type': 'string' },
+                },
+              'required':
+                [
+                  'home',
+                  'team',
+                  'location',
+                  'referee',
+                  'home-score',
+                  'away-score',
+                  'played',
+                ],
+            },
+          'PatchMatchDto':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'home':
+                    {
+                      'type': 'string',
+                      'example': '00000000-0000-4000-A000-000000000000',
+                    },
+                  'team':
+                    {
+                      'type': 'string',
+                      'example': '00000000-0000-4000-A000-000000000000',
+                    },
+                  'location':
+                    {
+                      'enum':
+                        [
+                          'Argentina',
+                          'Brazil',
+                          'Canada',
+                          'Chile',
+                          'England',
+                          'France',
+                          'Germany',
+                          'Italy',
+                          'Japan',
+                          'South_Korea',
+                          'Mexico',
+                          'Qatar',
+                          'Russia',
+                          'South_Africa',
+                          'Spain',
+                          'Sweden',
+                          'Switzerland',
+                          'United_States',
+                          'Uruguay',
+                          'unknown',
+                        ],
+                      'type': 'string',
+                    },
+                  'referee':
+                    {
+                      'type': 'string',
+                      'example': '00000000-0000-4000-A000-000000000000',
+                    },
+                  'home-score': { 'type': 'number', 'minimum': 0 },
+                  'away-score': { 'type': 'number', 'minimum': 0 },
+                  'played': { 'format': 'date-time', 'type': 'string' },
+                },
+            },
+          'Staff':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'wage':
+                    { 'type': 'number', 'nullable': true, 'example': '12.50' },
+                  'hire_date':
+                    {
+                      'format': 'date-time',
+                      'type': 'string',
+                      'nullable': true,
+                    },
+                  'id': { 'type': 'string' },
+                  'name': { 'type': 'string' },
+                  'last_name': { 'type': 'string' },
+                  'phone': { 'type': 'number', 'nullable': true },
+                  'email': { 'type': 'string', 'nullable': true },
+                  'dob': { 'format': 'date-time', 'type': 'string' },
+                  'role': { 'type': 'string' },
+                  'status':
+                    {
+                      'enum':
+                        [
+                          'injured',
+                          'active',
+                          'inactive',
+                          'suspended',
+                          'unknown',
+                        ],
+                      'type': 'string',
+                    },
+                },
+              'required': ['id', 'name', 'last_name', 'dob', 'role', 'status'],
+            },
+          'CreateStaffDto':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'name':
+                    { 'type': 'string', 'minLength': 3, 'example': 'Douglass' },
+                  'last_name':
+                    {
+                      'type': 'string',
+                      'minLength': 3,
+                      'example': 'Mc Murray',
+                    },
+                  'phone':
+                    {
+                      'type': 'number',
+                      'example': 5759939983,
+                      'minLength': 10,
+                    },
+                  'email':
+                    { 'type': 'string', 'example': 'd.mcmurray@test.com' },
+                  'dob':
+                    {
+                      'format': 'date-time',
+                      'type': 'string',
+                      'example': '2000-11-24',
+                    },
+                  'role': { 'type': 'string', 'example': 'player' },
+                  'status':
+                    {
+                      'enum':
+                        [
+                          'injured',
+                          'active',
+                          'inactive',
+                          'suspended',
+                          'unknown',
+                        ],
+                      'type': 'string',
+                      'example': 'injured',
+                    },
+                  'wage': { 'type': 'number', 'minimum': 0 },
+                  'hire_date': { 'format': 'date-time', 'type': 'string' },
+                },
+              'required': ['name', 'last_name', 'dob', 'role', 'wage'],
+            },
+          'UpdateStaffDto':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'name':
+                    { 'type': 'string', 'minLength': 3, 'example': 'Douglass' },
+                  'last_name':
+                    {
+                      'type': 'string',
+                      'minLength': 3,
+                      'example': 'Mc Murray',
+                    },
+                  'phone':
+                    {
+                      'type': 'number',
+                      'example': 5759939983,
+                      'minLength': 10,
+                    },
+                  'email':
+                    { 'type': 'string', 'example': 'd.mcmurray@test.com' },
+                  'dob':
+                    {
+                      'format': 'date-time',
+                      'type': 'string',
+                      'example': '2000-11-24',
+                    },
+                  'role': { 'type': 'string', 'example': 'player' },
+                  'status':
+                    {
+                      'enum':
+                        [
+                          'injured',
+                          'active',
+                          'inactive',
+                          'suspended',
+                          'unknown',
+                        ],
+                      'type': 'string',
+                      'example': 'injured',
+                    },
+                  'wage': { 'type': 'number', 'minimum': 0 },
+                  'hire_date': { 'format': 'date-time', 'type': 'string' },
+                },
+            },
+          'Audit':
+            {
+              'type': 'object',
+              'properties':
+                {
+                  'id': { 'type': 'string' },
+                  'entity':
+                    {
+                      'enum': ['match', 'member', 'person', 'team', 'staff'],
+                      'type': 'string',
+                    },
+                  'action':
+                    { 'enum': ['add', 'update', 'delete'], 'type': 'string' },
+                  'modified_at': { 'format': 'date-time', 'type': 'string' },
+                  'new_value': { 'type': 'object' },
+                },
+              'required':
+                ['id', 'entity', 'action', 'modified_at', 'new_value'],
+            },
+        },
+    },
+  'paths':
+    {
+      '/member':
+        {
+          'get':
+            {
+              'operationId': 'MemberController_getMembers',
+              'parameters': [],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                {
+                                  'type': 'array',
+                                  'items':
+                                    { '$ref': '#/components/schemas/Member' },
+                                },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Member'],
+            },
+          'post':
+            {
+              'operationId': 'MemberController_addMember',
+              'parameters': [],
+              'requestBody':
+                {
+                  'required': true,
+                  'content':
+                    {
+                      'application/json':
+                        {
+                          'schema':
+                            { '$ref': '#/components/schemas/PostMemberDto' },
+                        },
+                    },
+                },
+              'responses':
+                {
+                  '201':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Member'],
+            },
+        },
+      '/member/free-agent':
+        {
+          'get':
+            {
+              'operationId': 'MemberController_getFreeAgents',
+              'parameters': [],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                {
+                                  'type': 'array',
+                                  'items':
+                                    { '$ref': '#/components/schemas/Member' },
+                                },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Member'],
+            },
+        },
+      '/member/{memberId}':
+        {
+          'get':
+            {
+              'operationId': 'MemberController_getMember',
+              'parameters':
+                [
+                  {
+                    'name': 'memberId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                { '$ref': '#/components/schemas/Member' },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Member'],
+            },
+          'patch':
+            {
+              'operationId': 'MemberController_patchMember',
+              'parameters':
+                [
+                  {
+                    'name': 'memberId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'requestBody':
+                {
+                  'required': true,
+                  'content':
+                    {
+                      'application/json':
+                        {
+                          'schema':
+                            { '$ref': '#/components/schemas/PatchMemberDto' },
+                        },
+                    },
+                },
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Member'],
+            },
+          'delete':
+            {
+              'operationId': 'MemberController_deleteMember',
+              'parameters':
+                [
+                  {
+                    'name': 'memberId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Member'],
+            },
+        },
+      '/member/{memberId}/payment':
+        {
+          'post':
+            {
+              'operationId': 'MemberController_addMemberPayment',
+              'parameters':
+                [
+                  {
+                    'name': 'memberId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'requestBody':
+                {
+                  'required': true,
+                  'content':
+                    {
+                      'application/json':
+                        {
+                          'schema':
+                            { '$ref': '#/components/schemas/PostPaymentDto' },
+                        },
+                    },
+                },
+              'responses':
+                {
+                  '201':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Member'],
+            },
+        },
+      '/member/{memberId}/status':
+        {
+          'patch':
+            {
+              'operationId': 'MemberController_patchStatus',
+              'parameters':
+                [
+                  {
+                    'name': 'memberId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'requestBody':
+                {
+                  'required': true,
+                  'content':
+                    { 'application/json': { 'schema': { 'type': 'string' } } },
+                },
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Member'],
+            },
+        },
+      '/person':
+        {
+          'get':
+            {
+              'operationId': 'PersonController_getPeople',
+              'parameters': [],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                {
+                                  'type': 'array',
+                                  'items':
+                                    { '$ref': '#/components/schemas/Person' },
+                                },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Person'],
+            },
+        },
+      '/person/{personId}':
+        {
+          'get':
+            {
+              'operationId': 'PersonController_getPerson',
+              'parameters':
+                [
+                  {
+                    'name': 'personId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                { '$ref': '#/components/schemas/Person' },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Person'],
+            },
+        },
+      '/team':
+        {
+          'get':
+            {
+              'operationId': 'TeamController_getAllTeams',
+              'parameters': [],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                {
+                                  'type': 'array',
+                                  'items':
+                                    { '$ref': '#/components/schemas/Team' },
+                                },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Team'],
+            },
+          'post':
+            {
+              'operationId': 'TeamController_addTeam',
+              'parameters': [],
+              'requestBody':
+                {
+                  'required': true,
+                  'content':
+                    {
+                      'application/json':
+                        {
+                          'schema':
+                            { '$ref': '#/components/schemas/CreateTeamDto' },
+                        },
+                    },
+                },
+              'responses':
+                {
+                  '201':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Team'],
+            },
+        },
+      '/team/{teamId}':
+        {
+          'get':
+            {
+              'operationId': 'TeamController_getTeam',
+              'parameters':
+                [
+                  {
+                    'name': 'teamId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema': { '$ref': '#/components/schemas/Team' },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Team'],
+            },
+          'patch':
+            {
+              'operationId': 'TeamController_patchTeam',
+              'parameters':
+                [
+                  {
+                    'name': 'teamId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'requestBody':
+                {
+                  'required': true,
+                  'content':
+                    {
+                      'application/json':
+                        {
+                          'schema':
+                            { '$ref': '#/components/schemas/PatchTeamDto' },
+                        },
+                    },
+                },
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Team'],
+            },
+          'delete':
+            {
+              'operationId': 'TeamController_deleteTeam',
+              'parameters':
+                [
+                  {
+                    'name': 'teamId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Team'],
+            },
+        },
+      '/team/{teamId}/matches':
+        {
+          'get':
+            {
+              'operationId': 'TeamController_getTeamMatches',
+              'parameters':
+                [
+                  {
+                    'name': 'teamId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                {
+                                  'type': 'array',
+                                  'items':
+                                    { '$ref': '#/components/schemas/Match' },
+                                },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Team'],
+            },
+        },
+      '/team/{teamId}/member':
+        {
+          'get':
+            {
+              'operationId': 'TeamController_getTeamMembers',
+              'parameters':
+                [
+                  {
+                    'name': 'teamId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                  {
+                    'name': 'status',
+                    'required': false,
+                    'in': 'query',
+                    'schema': { 'type': 'string' },
+                  },
+                  {
+                    'name': 'role',
+                    'required': false,
+                    'in': 'query',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                {
+                                  'type': 'array',
+                                  'items':
+                                    { '$ref': '#/components/schemas/Member' },
+                                },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Team'],
+            },
+        },
+      '/team/{teamId}/stats':
+        {
+          'get':
+            {
+              'operationId': 'TeamController_getTeamStats',
+              'parameters':
+                [
+                  {
+                    'name': 'teamId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'responses': { '200': { 'description': '' } },
+              'tags': ['Team'],
+            },
+        },
+      '/team/{teamId}/status':
+        {
+          'patch':
+            {
+              'operationId': 'TeamController_patchStatus',
+              'parameters':
+                [
+                  {
+                    'name': 'teamId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'requestBody':
+                {
+                  'required': true,
+                  'content':
+                    {
+                      'application/json':
+                        {
+                          'schema':
+                            { '$ref': '#/components/schemas/PatchStatusDto' },
+                        },
+                    },
+                },
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Team'],
+            },
+        },
+      '/match':
+        {
+          'get':
+            {
+              'operationId': 'MatchController_getAllMatches',
+              'parameters': [],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                {
+                                  'type': 'array',
+                                  'items':
+                                    { '$ref': '#/components/schemas/Match' },
+                                },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Match'],
+            },
+          'post':
+            {
+              'operationId': 'MatchController_addMatch',
+              'parameters': [],
+              'requestBody':
+                {
+                  'required': true,
+                  'content':
+                    {
+                      'application/json':
+                        {
+                          'schema':
+                            { '$ref': '#/components/schemas/CreateMatchDto' },
+                        },
+                    },
+                },
+              'responses':
+                {
+                  '201':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Match'],
+            },
+        },
+      '/match/{matchId}':
+        {
+          'get':
+            {
+              'operationId': 'MatchController_getMatch',
+              'parameters':
+                [
+                  {
+                    'name': 'matchId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                { '$ref': '#/components/schemas/Match' },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Match'],
+            },
+          'patch':
+            {
+              'operationId': 'MatchController_patchMatch',
+              'parameters':
+                [
+                  {
+                    'name': 'matchId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'requestBody':
+                {
+                  'required': true,
+                  'content':
+                    {
+                      'application/json':
+                        {
+                          'schema':
+                            { '$ref': '#/components/schemas/PatchMatchDto' },
+                        },
+                    },
+                },
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Match'],
+            },
+          'delete':
+            {
+              'operationId': 'MatchController_deleteMatch',
+              'parameters':
+                [
+                  {
+                    'name': 'matchId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Match'],
+            },
+        },
+      '/staff':
+        {
+          'get':
+            {
+              'operationId': 'StaffController_getStaff',
+              'parameters': [],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                {
+                                  'type': 'array',
+                                  'items':
+                                    { '$ref': '#/components/schemas/Staff' },
+                                },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Staff'],
+            },
+          'post':
+            {
+              'operationId': 'StaffController_createStaff',
+              'parameters': [],
+              'requestBody':
+                {
+                  'required': true,
+                  'content':
+                    {
+                      'application/json':
+                        {
+                          'schema':
+                            { '$ref': '#/components/schemas/CreateStaffDto' },
+                        },
+                    },
+                },
+              'responses':
+                {
+                  '201':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Staff'],
+            },
+        },
+      '/staff/{staffId}':
+        {
+          'get':
+            {
+              'operationId': 'StaffController_getStaffMember',
+              'parameters':
+                [
+                  {
+                    'name': 'staffId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                { '$ref': '#/components/schemas/Staff' },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Staff'],
+            },
+          'patch':
+            {
+              'operationId': 'StaffController_updateStaffMember',
+              'parameters':
+                [
+                  {
+                    'name': 'staffId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'requestBody':
+                {
+                  'required': true,
+                  'content':
+                    {
+                      'application/json':
+                        {
+                          'schema':
+                            { '$ref': '#/components/schemas/UpdateStaffDto' },
+                        },
+                    },
+                },
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Staff'],
+            },
+          'delete':
+            {
+              'operationId': 'StaffController_deleteStaff',
+              'parameters':
+                [
+                  {
+                    'name': 'staffId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            { 'schema': { 'type': 'string' } },
+                        },
+                    },
+                },
+              'tags': ['Staff'],
+            },
+        },
+      '/audit':
+        {
+          'get':
+            {
+              'operationId': 'AuditController_getAudits',
+              'parameters': [],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                {
+                                  'type': 'array',
+                                  'items':
+                                    { '$ref': '#/components/schemas/Audit' },
+                                },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Audit'],
+            },
+        },
+      '/audit/{auditId}':
+        {
+          'get':
+            {
+              'operationId': 'AuditController_getAudit',
+              'parameters':
+                [
+                  {
+                    'name': 'auditId',
+                    'required': true,
+                    'in': 'path',
+                    'schema': { 'type': 'string' },
+                  },
+                ],
+              'responses':
+                {
+                  '200':
+                    {
+                      'description': '',
+                      'content':
+                        {
+                          'application/json':
+                            {
+                              'schema':
+                                { '$ref': '#/components/schemas/Audit' },
+                            },
+                        },
+                    },
+                },
+              'tags': ['Audit'],
+            },
+        },
+    },
+}
