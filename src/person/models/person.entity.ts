@@ -1,73 +1,55 @@
-import {
-  IsEmail,
-  IsOptional,
-  IsPhoneNumber,
-  IsString,
-  IsUUID,
-  Min,
-} from 'class-validator';
+import validObject from '../../utils/validObject';
 import {
   TableInheritance,
   Column,
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { status } from '../../utils/enums';
+import { InitializePersonDto, UpdatePersonDto } from '../person.dto';
 
 @Entity()
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
 export class Person {
   @PrimaryGeneratedColumn('uuid')
-  @IsUUID()
   id: string;
 
   @Column()
-  @IsString()
   name: string;
 
   @Column()
-  @IsString()
   last_name: string;
 
-  @Column({ type: 'bigint' })
-  @IsPhoneNumber()
-  @IsOptional()
+  @Column({ type: 'bigint', nullable: true })
   phone?: number | null;
 
-  @Column()
-  @IsEmail()
-  @IsOptional()
+  @Column({ nullable: true })
   email?: string | null;
 
   @Column()
-  @IsOptional()
-  dob?: Date | null;
+  dob: Date;
 
   @Column()
-  @IsString()
   role: string;
 
-  @Column()
-  @IsString()
-  status: string;
+  @Column({ enum: status, type: 'enum', default: 'unknown' })
+  status: status;
 
-  @Column()
-  @Min(0)
-  @IsOptional()
-  age?: number | null;
+  constructor(config?: InitializePersonDto) {
+    this.seedPerson(config);
+  }
 
-  constructor(config?: {
-    name?: string;
-    last_name?: string;
-    phone?: number;
-    email?: string;
-    dob?: Date;
-    role?: string;
-    status?: string;
-    age?: number;
-  }) {
-    if (!config || Object.keys(config).length === 0) return;
+  /**
+   * @description Sets object data
+   *
+   * @param {InitializePersonDto} config Data to be seeded
+   * @returns {string}
+   */
+  public seedPerson(config?: InitializePersonDto): string {
+    if (!validObject(config) || Object.keys(config).length === 0) return;
 
     [
+      'id',
       'name',
       'last_name',
       'phone',
@@ -75,12 +57,31 @@ export class Person {
       'dob',
       'role',
       'status',
-      'age',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
+    return 'Done';
+  }
+
+  /**
+   * @description Updates object data
+   *
+   * @param {UpdatePersonDto} config Update data
+   * @returns {string}
+   */
+  public update(config?: UpdatePersonDto): string {
+    if (!validObject(config) || Object.keys(config).length === 0) return;
+
+    // Make sure constant fields are not updated
+    const temp: any = config || {};
+    ['id'].map((k) => temp[k] && delete temp[k]);
+
+    this.seedPerson(temp);
+    return 'Done';
   }
 
   /**
    * @description Object representation of entity
+   *
+   * @returns {Object} All keys currently defined in this object
    */
   public toObject(): Record<keyof this, any> {
     return Object.keys(this).reduce(

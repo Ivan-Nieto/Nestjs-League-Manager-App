@@ -8,12 +8,13 @@ import {
   Post,
 } from '@nestjs/common';
 import { MatchIdValidationPipe } from './validationPipes/MatchIdValidationPipe';
-import { CreateMatchValidationPipe } from './validationPipes/CreateMatchValidationPipe';
 import { MatchService } from './match.service';
 import { PatchMatchDto, CreateMatchDto } from './match.dto';
-import { PatchMatchValidationPipe } from './validationPipes/PatchMatchValidationPipe';
+import { ApiTags } from '@nestjs/swagger';
+import { ValidateDtoPipe } from '../utils/ValidateDtoPipe';
 
 @Controller('match')
+@ApiTags('Match')
 export class MatchController {
   constructor(private matchService: MatchService) {}
 
@@ -23,7 +24,7 @@ export class MatchController {
   }
 
   @Post()
-  addMatch(@Body(CreateMatchValidationPipe) match: CreateMatchDto) {
+  addMatch(@Body(new ValidateDtoPipe(CreateMatchDto)) match: CreateMatchDto) {
     return this.matchService.addMatch(match);
   }
 
@@ -35,7 +36,7 @@ export class MatchController {
   @Patch(':matchId')
   patchMatch(
     @Param('matchId', MatchIdValidationPipe) matchId: string,
-    @Body(PatchMatchValidationPipe) config: PatchMatchDto,
+    @Body(new ValidateDtoPipe(PatchMatchDto)) config: PatchMatchDto,
   ) {
     return this.matchService.updateMatch(matchId, config);
   }

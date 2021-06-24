@@ -9,14 +9,18 @@ import {
 } from '@nestjs/common';
 import { MemberIdValidationPipe } from './validationPipes/MemberIdValidationPipe';
 import { CreateMemberValidationPipe } from './validationPipes/CreateMemberValidationPipe';
-import { PaymentValidationPipe } from './validationPipes/PaymentValidationPipe';
-import { UpdateMemberValidationPipe } from './validationPipes/UpdateMemberValidationPipe';
 import { MemberService } from './member.service';
 import { UpdatePersonStatusDto } from '../person/person.dto';
 import { PostMemberDto, PatchMemberDto, PostPaymentDto } from './member.dto';
-import { PatchMemberStatusValidationPipe } from './validationPipes/PatchMemberStatusValidationPipe';
+import { ApiTags } from '@nestjs/swagger';
+import {
+  ValidateDtoPipe,
+  ValidateDtoValuePipe,
+} from '../utils/ValidateDtoPipe';
+import { status } from '../utils/enums';
 
 @Controller('member')
+@ApiTags('Member')
 export class MemberController {
   constructor(private memberService: MemberService) {}
 
@@ -43,7 +47,7 @@ export class MemberController {
   @Post('/:memberId/payment')
   addMemberPayment(
     @Param('memberId', MemberIdValidationPipe) memberId: string,
-    @Body(PaymentValidationPipe) payment: PostPaymentDto,
+    @Body(new ValidateDtoPipe(PostPaymentDto)) payment: PostPaymentDto,
   ) {
     return this.memberService.makePayment(memberId, payment.amount);
   }
@@ -51,15 +55,16 @@ export class MemberController {
   @Patch(':memberId/status')
   patchStatus(
     @Param('memberId', MemberIdValidationPipe) memberId: string,
-    @Body(PatchMemberStatusValidationPipe) data: UpdatePersonStatusDto,
+    @Body(new ValidateDtoValuePipe(UpdatePersonStatusDto, 'status'))
+    status: status,
   ) {
-    return this.memberService.patchUserStatus(memberId, data.status);
+    return this.memberService.patchUserStatus(memberId, status);
   }
 
   @Patch('/:memberId')
   patchMember(
     @Param('memberId', MemberIdValidationPipe) memberId: string,
-    @Body(UpdateMemberValidationPipe) data: PatchMemberDto,
+    @Body(new ValidateDtoPipe(PatchMemberDto)) data: PatchMemberDto,
   ) {
     return this.memberService.updateMember(memberId, data);
   }

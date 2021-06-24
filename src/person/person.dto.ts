@@ -1,16 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsInt,
-  Min,
   IsString,
   IsOptional,
   IsEmail,
   MinLength,
+  IsNotEmpty,
   IsUUID,
+  IsInt,
   IsDateString,
+  IsEnum,
+  ValidateIf,
 } from 'class-validator';
 import { PartialType, PickType, OmitType } from '@nestjs/swagger';
-import validObject from 'src/utils/validObject';
+import validObject from '../utils/validObject';
+import { status } from '../utils/enums';
+import PhoneNumber from '../utils/PhoneNumberValidator';
 
 export class PersonDto {
   @IsUUID()
@@ -18,37 +22,43 @@ export class PersonDto {
 
   @IsString()
   @MinLength(3)
+  @ApiProperty({ example: 'Douglass' })
   name: string;
 
   @IsString()
   @MinLength(3)
+  @ApiProperty({ example: 'Mc Murray' })
   last_name: string;
 
+  @ValidateIf(
+    (o) => (!Boolean(o.email) && !Boolean(o.phone)) || Boolean(o.phone),
+  )
   @IsInt()
-  @IsOptional()
-  @ApiProperty({ type: 'number', example: 1230003131, minLength: 10 })
+  @PhoneNumber()
+  @ApiProperty({ type: 'number', example: 5759939983, minLength: 10 })
   phone?: number;
 
+  @ValidateIf(
+    (o) => (!Boolean(o.email) && !Boolean(o.phone)) || Boolean(o.email),
+  )
   @IsEmail()
-  @IsOptional()
+  @ApiProperty({ example: 'd.mcmurray@test.com' })
   email?: string;
 
+  @IsNotEmpty()
   @IsDateString()
-  @IsOptional()
-  dob?: Date;
+  @ApiProperty({ example: '2000-11-24' })
+  dob: Date;
 
-  @IsOptional()
   @IsString()
+  @ApiProperty({ example: 'player' })
   role: string;
 
   @IsOptional()
   @IsString()
-  status: string;
-
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  age?: number;
+  @IsEnum(status)
+  @ApiProperty({ example: 'injured', type: 'enum', enum: status })
+  status?: status;
 
   constructor(config?: {
     id?: string;
@@ -58,10 +68,22 @@ export class PersonDto {
     email?: string;
     dob?: string;
     role?: string;
-    status?: string;
-    age?: number;
+    status?: status;
   }) {
     if (!config || Object.keys(config).length === 0) return;
+    this.seedPerson(config);
+  }
+
+  public seedPerson(config?: {
+    id?: string;
+    name?: string;
+    last_name?: string;
+    phone?: number;
+    email?: string;
+    dob?: string;
+    role?: string;
+    status?: status;
+  }) {
     if (!validObject(config) || Object.keys(config).length === 0) return;
 
     [
@@ -73,11 +95,11 @@ export class PersonDto {
       'dob',
       'role',
       'status',
-      'age',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
   }
 }
 
+export class InitializePersonDto extends PartialType(PersonDto) {}
 export class PersonIdDto extends PickType(PersonDto, ['id']) {
   constructor(config?: { id: string }) {
     super(config);
@@ -98,7 +120,6 @@ export class CreatePersonDto extends OmitType(PersonDto, ['id']) {
       'dob',
       'role',
       'status',
-      'age',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
   }
 }
@@ -116,7 +137,6 @@ export class UpdatePersonDto extends PartialType(CreatePersonDto) {
       'dob',
       'role',
       'status',
-      'age',
     ].forEach((e) => (config[e] == null ? null : (this[e] = config[e])));
   }
 }
@@ -124,15 +144,15 @@ export class UpdatePersonDto extends PartialType(CreatePersonDto) {
 export class UpdatePersonStatusDto extends PickType(CreatePersonDto, [
   'status',
 ]) {
-  constructor(config?: { status: string }) {
-    super(config);
+  constructor(config?: { status: status }) {
+    super();
     this.status = config?.status;
   }
 }
 
 export class UpdatePersonRoleDto extends PickType(CreatePersonDto, ['role']) {
   constructor(config?: { role: string }) {
-    super(config);
+    super();
     this.role = config?.role;
   }
 }

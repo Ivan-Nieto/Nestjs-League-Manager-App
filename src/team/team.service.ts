@@ -6,6 +6,8 @@ import { Match } from '../match/models/match.entity';
 import { Member } from '../member/models/member.entity';
 import { CreateTeamDto, PatchTeamDto } from './team.dto';
 
+export const MAX_MEMBERS_PER_TEAM = 10;
+
 @Injectable()
 export class TeamService {
   constructor(
@@ -24,13 +26,59 @@ export class TeamService {
   }
 
   /**
+   * @description Counts the number of members in a team that can still be created
+   * @throws
+   *
+   * @param teamId Team uuid
+   * @returns {number} Number of available members left before max is reached
+   */
+  public async getNumMembersLeft(teamId: string): Promise<number> {
+    return this.connection.manager
+      .count(Member, {
+        where: { team_id: teamId },
+      })
+      .then((num: number) => {
+        return MAX_MEMBERS_PER_TEAM - num;
+      })
+      .catch((error) => {
+        console.error(error);
+        throw new HttpException(
+          'Failed to count number of members in team',
+          500,
+        );
+      });
+  }
+
+  /**
+   * @description Updates a member entity
+   * @throws
+   *
+   * @param {Member} mem Member entity
+   * @param {Object} data Update data
+   * @returns {string} Done
+   */
+  private async updateMember(
+    mem: Member,
+    data: Record<string, any>,
+  ): Promise<string> {
+    mem.update(data);
+    return this.connection.manager
+      .save(mem)
+      .then(() => 'Done')
+      .catch((error) => {
+        console.error(error);
+        throw new HttpException('Failed to run update', 500);
+      });
+  }
+
+  /**
    * @description Finds a Team by uuid and throws a 404 error if not found
    * @throws
    *
    * @param {string} teamId Team uuid
    * @returns {Team}
    */
-  private async exists(teamId: string): Promise<Team> {
+  public async exists(teamId: string): Promise<Team> {
     const data = await this.connection.findOne(teamId).catch((error) => {
       console.error(error);
       this.notFound();
@@ -68,16 +116,8 @@ export class TeamService {
       );
     };
 
-    const updateMember = async (id: string) =>
-      this.connection.manager
-        .update(Member, id, { team_id: team.id })
-        .catch((error) => {
-          console.error(error);
-          throw new HttpException('Failed to run update', 500);
-        });
-
     // Make sure coach and captain exists and can be assigned to team
-    let captain;
+    let captain: Member;
     if (data.captain) {
       captain = await this.connection.manager
         .findOne(Member, data.captain)
@@ -89,7 +129,7 @@ export class TeamService {
       partOfTeam(captain?.team_id, 'captain');
     }
 
-    let coach;
+    let coach: Member;
     if (data.coach && data.captain !== data.coach) {
       coach = await this.connection.manager
         .findOne(Member, data.coach)
@@ -101,6 +141,21 @@ export class TeamService {
       partOfTeam(coach?.team_id, 'coach');
     }
 
+    // Make sure team name is unique
+    const teamName = await this.connection
+      .findOne({
+        where: {
+          name: data.name,
+        },
+      })
+      .catch((error) => {
+        console.error(error);
+        throw new HttpException('Failed to validate team name', 500);
+      });
+
+    if (teamName)
+      throw new HttpException('Team with this name already exists', 400);
+
     // Create team
     await this.connection.save(team).catch(() => {
       throw new HttpException('Failed to create team', 500);
@@ -108,9 +163,10 @@ export class TeamService {
 
     // Assign coach/captain to this team
     try {
-      if (captain && captain.team_id == null) await updateMember(captain.id);
+      if (captain && captain.team_id == null)
+        await this.updateMember(captain, { team_id: team.id });
       if (coach && coach.team_id == null && data.captain !== data.coach)
-        await updateMember(coach.id);
+        await this.updateMember(coach, { team_id: team.id });
     } catch (error) {
       console.error(error);
       await this.connection.delete(team.id).catch(console.error);
@@ -246,7 +302,8 @@ export class TeamService {
    */
   public async updateTeam(teamId: string, data: PatchTeamDto): Promise<string> {
     // Make sure team exists
-    await this.exists(teamId);
+    const team = await this.exists(teamId);
+    team.update(data);
 
     const internal = (error?: any): never => {
       console.error(error);
@@ -262,35 +319,61 @@ export class TeamService {
 
     // If updating coach or captain make sure those members exists
     // Also make sure coach and captain belong to this team
+    let captain: Member;
     if (data.captain) {
-      const captain = await this.connection.manager
+      captain = await this.connection.manager
         .findOne(Member, data.captain)
         .catch(internal);
       checkUser('captain', captain);
     }
 
+    let coach: Member;
     if (data.coach) {
-      const coach = await this.connection.manager
+      coach = await this.connection.manager
         .findOne(Member, data.coach)
         .catch(internal);
       checkUser('coach', coach);
     }
 
-    await this.connection.update(teamId, data).catch(internal);
-
-    const updateMember = async (id: string) =>
-      this.connection.manager
-        .update(Member, id, { team_id: teamId })
+    // Make sure team name is unique if it's being updated
+    if (data.name) {
+      const teamName = await this.connection
+        .findOne({
+          where: {
+            name: data.name,
+          },
+        })
         .catch((error) => {
           console.error(error);
-          throw new HttpException('Failed to update team member', 500);
+          throw new HttpException('Failed to validate team name', 500);
         });
 
+      if (teamName)
+        throw new HttpException('Team with this name already exists', 400);
+    }
+
+    // Make sure max number of team members has not been reached;
+    if (captain || coach) {
+      let newMembersAdded = 0;
+
+      // Count number of free-agents being re-assigned to this team
+      if (captain && captain.team_id !== teamId) newMembersAdded += 1;
+      if (coach && coach.team_id !== teamId) newMembersAdded += 1;
+
+      if (newMembersAdded !== 0) {
+        const membersLeft = await this.getNumMembersLeft(teamId);
+        if (membersLeft - newMembersAdded < 0)
+          throw new HttpException('Max number of team members exceeded', 400);
+      }
+    }
+
+    await this.connection.save(team).catch(internal);
+
     // Update captain if necessary
-    if (data.captain) await updateMember(data.captain);
+    if (captain) await this.updateMember(captain, { team_id: team.id });
 
     // Update coach if necessary
-    if (data.coach) await updateMember(data.coach);
+    if (coach) await this.updateMember(coach, { team_id: team.id });
 
     return 'Done';
   }

@@ -5,6 +5,8 @@ import { TeamModule } from './team/team.module';
 import { MatchModule } from './match/match.module';
 import { DatabaseModule } from './database/database.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { StaffModule } from './staff/staff.module';
+import { AuditModule } from './audit/audit.module';
 import config from './database/config/ormconfig';
 
 @Module({
@@ -15,6 +17,8 @@ import config from './database/config/ormconfig';
     TeamModule,
     MatchModule,
     TypeOrmModule.forRoot(config),
+    StaffModule,
+    AuditModule,
   ],
 })
 export class AppModule {}
