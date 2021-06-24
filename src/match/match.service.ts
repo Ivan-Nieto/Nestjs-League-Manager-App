@@ -85,6 +85,36 @@ export class MatchService {
 
     const match = new Match(data);
 
+    // Make sure location/time is available +/- 1hr
+    const endDate = new Date(match.played);
+    const startDate = new Date(match.played);
+    endDate.setHours(endDate.getHours() + 1);
+    startDate.setHours(startDate.getHours() - 1);
+
+    const prevMatch = await this.connection
+      .createQueryBuilder('match')
+      .where(`match.played < :endDate AND match.played > :startDate`, {
+        endDate,
+        startDate,
+      })
+      .andWhere('match.location = :location', {
+        location: match.location,
+      })
+      .getOne()
+      .catch((error) => {
+        console.error(error);
+        throw new HttpException(
+          'Failed to validate location availability',
+          500,
+        );
+      });
+
+    if (prevMatch)
+      throw new HttpException(
+        'Match already scheduled for this time/location',
+        400,
+      );
+
     return this.connection
       .save(match)
       .then(() => 'Done')
@@ -141,6 +171,40 @@ export class MatchService {
           throw new HttpException('Failed to validate referee', 500);
         });
       if (!referee) this.notFound('Referee not found');
+    }
+
+    // If the match date/location is being updated
+    // make sure no other games are scheduled for the same time
+    if (data?.location || data?.played) {
+      // Make sure location/time is available +/- 1hr
+      const endDate = new Date(data.played || match.played);
+      const startDate = new Date(data.played || match.played);
+      endDate.setHours(endDate.getHours() + 1);
+      startDate.setHours(startDate.getHours() - 1);
+
+      const prevMatches = await this.connection
+        .createQueryBuilder('match')
+        .where(`match.played < :endDate AND match.played > :startDate`, {
+          endDate,
+          startDate,
+        })
+        .andWhere('match.location = :location', {
+          location: data.location || match.location,
+        })
+        .getMany()
+        .catch((error) => {
+          console.error(error);
+          throw new HttpException(
+            'Failed to validate location availability',
+            500,
+          );
+        });
+
+      if (prevMatches.length > 0 && prevMatches.some((m) => m.id !== match.id))
+        throw new HttpException(
+          'Match already scheduled for this time/location',
+          400,
+        );
     }
 
     match.update(data);

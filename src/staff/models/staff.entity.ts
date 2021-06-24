@@ -2,10 +2,12 @@ import validObject from '../../utils/validObject';
 import { ChildEntity, Column } from 'typeorm';
 import { Person } from '../../person/models/person.entity';
 import { InitializeStaffDto, UpdateStaffDto } from '../staff.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
 @ChildEntity()
 export class Staff extends Person {
-  @Column()
+  @Column({ type: 'decimal' })
+  @ApiProperty({ example: '12.50' })
   wage?: number | null;
 
   @Column()

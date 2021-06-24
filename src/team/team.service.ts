@@ -6,6 +6,8 @@ import { Match } from '../match/models/match.entity';
 import { Member } from '../member/models/member.entity';
 import { CreateTeamDto, PatchTeamDto } from './team.dto';
 
+export const MAX_MEMBERS_PER_TEAM = 10;
+
 @Injectable()
 export class TeamService {
   constructor(
@@ -21,6 +23,30 @@ export class TeamService {
    */
   private notFound(message?: string): never {
     throw new HttpException(message || 'Not Found', 404);
+  }
+
+  /**
+   * @description Counts the number of members in a team that can still be created
+   * @throws
+   *
+   * @param teamId Team uuid
+   * @returns {number} Number of available members left before max is reached
+   */
+  public async getNumMembersLeft(teamId: string): Promise<number> {
+    return this.connection.manager
+      .count(Member, {
+        where: { team_id: teamId },
+      })
+      .then((num: number) => {
+        return MAX_MEMBERS_PER_TEAM - num;
+      })
+      .catch((error) => {
+        console.error(error);
+        throw new HttpException(
+          'Failed to count number of members in team',
+          500,
+        );
+      });
   }
 
   /**
@@ -52,7 +78,7 @@ export class TeamService {
    * @param {string} teamId Team uuid
    * @returns {Team}
    */
-  private async exists(teamId: string): Promise<Team> {
+  public async exists(teamId: string): Promise<Team> {
     const data = await this.connection.findOne(teamId).catch((error) => {
       console.error(error);
       this.notFound();
@@ -114,6 +140,21 @@ export class TeamService {
       if (!coach) throw new HttpException('Coach not found', 404);
       partOfTeam(coach?.team_id, 'coach');
     }
+
+    // Make sure team name is unique
+    const teamName = await this.connection
+      .findOne({
+        where: {
+          name: data.name,
+        },
+      })
+      .catch((error) => {
+        console.error(error);
+        throw new HttpException('Failed to validate team name', 500);
+      });
+
+    if (teamName)
+      throw new HttpException('Team with this name already exists', 400);
 
     // Create team
     await this.connection.save(team).catch(() => {
@@ -292,6 +333,38 @@ export class TeamService {
         .findOne(Member, data.coach)
         .catch(internal);
       checkUser('coach', coach);
+    }
+
+    // Make sure team name is unique if it's being updated
+    if (data.name) {
+      const teamName = await this.connection
+        .findOne({
+          where: {
+            name: data.name,
+          },
+        })
+        .catch((error) => {
+          console.error(error);
+          throw new HttpException('Failed to validate team name', 500);
+        });
+
+      if (teamName)
+        throw new HttpException('Team with this name already exists', 400);
+    }
+
+    // Make sure max number of team members has not been reached;
+    if (captain || coach) {
+      let newMembersAdded = 0;
+
+      // Count number of free-agents being re-assigned to this team
+      if (captain && captain.team_id !== teamId) newMembersAdded += 1;
+      if (coach && coach.team_id !== teamId) newMembersAdded += 1;
+
+      if (newMembersAdded !== 0) {
+        const membersLeft = await this.getNumMembersLeft(teamId);
+        if (membersLeft - newMembersAdded < 0)
+          throw new HttpException('Max number of team members exceeded', 400);
+      }
     }
 
     await this.connection.save(team).catch(internal);

@@ -1,5 +1,12 @@
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
-import { IsDateString, IsNumber, IsString, IsUUID, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsNumber,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
 import { PartialType } from '@nestjs/swagger';
 import validObject from '../utils/validObject';
 import { location } from '../utils/enums';
@@ -29,6 +36,7 @@ export class MatchDto {
 
   @IsString()
   @ApiProperty({ enum: location })
+  @IsEnum(location)
   location: location;
 
   @IsUUID()
